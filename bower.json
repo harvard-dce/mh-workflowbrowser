@@ -1,6 +1,12 @@
 {
-  "name": "wfb",
-  "private": true,
+  "name": "mh-workflowbrowser",
+  "version": "0.1.0",
+  "main": ["app/scripts/main.js","app/styles/main.css"],
+  "keywords": ["matterhorn","timeline","d3","workflow","visualization"],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/harvard-dce/mh-workflowbrowser.git"
+  },
   "dependencies": {
     "jquery": "~1.11.1",
     "d3": "~3.5.3",
