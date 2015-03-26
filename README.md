@@ -1,7 +1,7 @@
 ## Synopsis
 
-The Matterhorn Workflow Browser (WFB) is an interactive d3 based
-javascript visualization optimized for relative small chunks (a few
+The Matterhorn Workflow Browser (WFB) is an interactive d3-based
+javascript visualization optimized for relatively small chunks (a few
 hundred) of [Opencast Matterhorn](http://opencast.org/matterhorn/)
 "workflow instances." Users may zoom, pan, and filter by a variety of
 criteria. Mouse over an element for more information, click on an
@@ -22,9 +22,9 @@ WFB is a client-side only widget, so the endpoint json will have to be
 retrieved by an intermediate process that handles authentication,
 either via a simple cronjob to generate flat files (the way we are
 currently using it, using
-[pyhorn](https://github.com/harvard-dce/pyhorn) the last 300 workflows
-every 10 minutes), or by embedding it in a dynamic webapp (as we plan
-to).
+[pyhorn](https://github.com/harvard-dce/pyhorn) to fetch the last 300
+workflows every 10 minutes), or by embedding it in a dynamic webapp
+(as we plan to).
 
 Because the Matterhorn workflow api does not currently return media
 info for all workflow instance (duration is of particular interest),
@@ -66,7 +66,34 @@ via bower.
 
 See the sample index.html file for a working example.
 
+The workflowBrowser function creates and instance of the WFB and
+inserts it into the specified "target" div and desired height and
+width. Feed it an array of "dataSources", each with "name", workfow
+json "dataUrl" to load, and "host" to hyperlink back to when elements
+are clicked.
 
+```
+      wfb = workflowBrowser({
+      dataSource: 'Prod',
+      dataSources: [ 
+      {'name': 'Dev',   'host': 'http://dev.admin.mh.uni.edu',   'dataUrl':'data/dev_dump.json'   },
+      {'name': 'Stage', 'host': 'http://stage.admin.mh.uni.edu', 'dataUrl':'data/stage_dump.json' },
+      {'name': 'Prod',  'host': 'http://prod.admin.mh.uni.edu',  'dataUrl':'data/prod_dump.json'  }
+      ],
+      width: window.innerWidth,
+      height: window.innerHeight,
+      target: '#wfb'
+      });
+
+```      
+
+If you want the WFB to resize dynamically with the window, add something like the following:
+
+```
+      $( window ).resize(function() {
+      wfb.size(window.innerWidth,window.innerHeight);
+      });
+```
 
 ## Contributors
 

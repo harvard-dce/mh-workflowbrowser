@@ -859,7 +859,7 @@ function workflowBrowser(conf){
     'use strict';
     var wfb = {};
     var dataSource = _.find(conf.dataSources,function(ds){ return ds.name === conf.dataSource; });
-    var dataUrl =  dataSource.init;
+    var dataUrl =  dataSource.dataUrl;
     console.log(dataSource);
     wfb.dataSource = conf.dataSource;
     d3.select(conf.target).html('<p class="wfbloading">Loading workflow data...</p>');    
