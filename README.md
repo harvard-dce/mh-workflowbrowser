@@ -9,6 +9,8 @@ element to link back to the corresponding page in the Matterhorn admin
 UI. Its purpose is to give a raw but accessible overview of the last
 week or so of Matterhorn workflow activity.
 
+![Screenshot](doc/wfb.png)
+
 A "workflow instance" (set of videos and metadata passing through the
 system) is represented as series of operations (fat boxes) linked
 together by a thin line. Operations are color coded by type
@@ -64,9 +66,7 @@ via bower.
 
 ## Configuration
 
-See the sample index.html file for a working example.
-
-The workflowBrowser function creates and instance of the WFB and
+The "workflowBrowser" function creates and instance of the WFB and
 inserts it into the specified "target" div and desired height and
 width. Feed it an array of "dataSources", each with "name", workfow
 json "dataUrl" to load, and "host" to hyperlink back to when elements
@@ -94,6 +94,8 @@ If you want the WFB to resize dynamically with the window, add something like th
       wfb.size(window.innerWidth,window.innerHeight);
       });
 ```
+
+See the sample index.html file for a working example.
 
 ## Contributors
 
