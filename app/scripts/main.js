@@ -41,17 +41,6 @@ function _createWorkflowBrowser(wfb,conf) {
 
     var twentyFourHoursInMs = 24*60*60*1000;
 
-    wfb.size = function(w,h) {
-	if (!arguments.length) {
-	    return [width,height];
-	}
-	
-	width  = w;
-	height = h;
-	wfb.refresh();
-	return wfb;
-    };
-
     // rationalize data workflow data structure if getting straight from MH.
     if (conf.workflows.hasOwnProperty('workflows') ) {
 	conf.workflows = conf.workflows.workflows.workflow;
@@ -300,9 +289,6 @@ function _createWorkflowBrowser(wfb,conf) {
 	    });
     };
 
-
-
-
     var processWorkflows = function(){
 	rows = [[]];
 	workflows = conf.workflows;
@@ -499,13 +485,15 @@ function _createWorkflowBrowser(wfb,conf) {
     var xaxis = d3.svg.axis().scale(scale)
 	.orient('bottom');
 
+    var updateXAxis = function(){
+	// I don't quite get what this does, but seems to be necessary after zoom and resize.
+	svg.select('g').call(xaxis).selectAll('text').style('font-size', '8x');
+    };
+    
     var zoom = d3.behavior.zoom()
-	//.scaleExtent(offHours[0].dateStarted,offHours[offHours.length-1].dateCompleted)
 	.on('zoom', function(){
-		svg.select('g').call(xaxis).selectAll('text').style('font-size', '8x');
-		renderEvents();
-	    }).x(scale);
-
+	    wfb.refresh();
+	}).x(scale);
 
     // pane to catch zoom events.
     var zoomPane = svg.append('rect')
@@ -846,6 +834,7 @@ function _createWorkflowBrowser(wfb,conf) {
     renderEvents();
 
     wfb.refresh = function(){
+	updateXAxis();
 	renderEvents();
     };
 
