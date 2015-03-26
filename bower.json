@@ -1,8 +1,17 @@
 {
   "name": "mh-workflowbrowser",
   "version": "0.1.0",
-  "main": ["app/scripts/main.js","app/styles/main.css"],
-  "keywords": ["matterhorn","timeline","d3","workflow","visualization"],
+  "main": [
+    "app/scripts/main.js",
+    "app/styles/main.css"
+  ],
+  "keywords": [
+    "matterhorn",
+    "timeline",
+    "d3",
+    "workflow",
+    "visualization"
+  ],
   "repository": {
     "type": "git",
     "url": "git://github.com/harvard-dce/mh-workflowbrowser.git"
@@ -14,5 +23,8 @@
     "bootstrap": "~3.3.1",
     "d3-tip": "~0.6.6",
     "underscore": "~1.7.0"
+  },
+  "resolutions": {
+    "d3": "~3.5.3"
   }
 }
