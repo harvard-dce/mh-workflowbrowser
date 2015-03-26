@@ -1,5 +1,7 @@
 ## Synopsis
 
+[![Build Status](https://travis-ci.org/harvard-dce/mh-workflowbrowser.png?branch=master)](https://travis-ci.org/harvard-dce/mh-workflowbrowser)
+
 The Matterhorn Workflow Browser (WFB) is an interactive d3-based
 javascript visualization optimized for relatively small chunks (a few
 hundred) of [Opencast Matterhorn](http://opencast.org/matterhorn/)
