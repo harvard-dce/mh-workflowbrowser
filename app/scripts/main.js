@@ -386,7 +386,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	    });
 	$('#'+id).val(selected);
 	$('#'+id).change(function(){
-		conf.dataSource = $('#'+id).val();
+	    conf.selectedDataSourceName = $('#'+id).val();
 		wfb = null;
 		//total reload.
 		workflowBrowser(conf);
@@ -465,9 +465,8 @@ function _createWorkflowBrowser(wfb,conf) {
 	    });
     };
     
-
     wfb.operationIds.sort();
-    createSelectionLoader('Host','hostselector',wfb.dataSources,wfb.dataSource);
+    createSelectionLoader('Host','hostselector',wfb.dataSources,wfb.dataSource.name);
     createTextFilter();
     createSelectionFilter('Operations','opfilter',wfb.operationIds,'visibleOperationIds');
     createDurationFilter();
@@ -625,7 +624,6 @@ function _createWorkflowBrowser(wfb,conf) {
 	}
     };
 
-
     var wf24Tip = d3.tip()
 	.attr('class', 'd3-tip')
 	.offset([-10,0])
@@ -669,7 +667,6 @@ function _createWorkflowBrowser(wfb,conf) {
 	    return 'n';
 	});
 
-
     var setOperationHeight = function(){
 	maxOperationHeight = 28;
 	operationHeight = (height - rulerHeight) / rows.length;
@@ -681,7 +678,7 @@ function _createWorkflowBrowser(wfb,conf) {
     };
 
     var workflowUrl = function(workflowId) {
-	return 'http://' +conf.dataSource + '/admin/index.html#/inspect?id=' + workflowId;
+	return wfb.dataSource.host + '/admin/index.html#/inspect?id=' + workflowId;
     };
 
     var sizeEvents = function (events){
@@ -858,11 +855,9 @@ function _createWorkflowBrowser(wfb,conf) {
 function workflowBrowser(conf){
     'use strict';
     var wfb = {};
-    var dataSource = _.find(conf.dataSources,function(ds){ return ds.name === conf.dataSource; });
-    var dataUrl =  dataSource.dataUrl;
-    console.log(dataSource);
-    wfb.dataSource = conf.dataSource;
-    d3.select(conf.target).html('<p class="wfbloading">Loading workflow data...</p>');    
+    wfb.dataSource = _.find(conf.dataSources,function(ds){ return ds.name === conf.selectedDataSourceName; });
+    var dataUrl =  wfb.dataSource.dataUrl;
+    d3.select(conf.target).html('<p class="wfb_loading">Loading workflow data...</p>');    
     d3.json(dataUrl, function(error,data) {
 	    if (error) {
 		var message ='Error getting data from : ' + dataUrl;

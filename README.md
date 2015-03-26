@@ -70,17 +70,17 @@ The "workflowBrowser" function creates and instance of the WFB and
 inserts it into the specified "target" div and desired height and
 width. Feed it an array of "dataSources", each with "name", workfow
 json "dataUrl" to load, and "host" to hyperlink back to when elements
-are clicked.
+are clicked. Specify which to load initially with "selectedDataSourceName."
 
 ```
       wfb = workflowBrowser({
-      dataSource: 'Prod',
       dataSources: [ 
       {'name': 'Dev',   'host': 'http://dev.admin.mh.uni.edu',   'dataUrl':'data/dev_dump.json'   },
       {'name': 'Stage', 'host': 'http://stage.admin.mh.uni.edu', 'dataUrl':'data/stage_dump.json' },
       {'name': 'Prod',  'host': 'http://prod.admin.mh.uni.edu',  'dataUrl':'data/prod_dump.json'  }
       ],
-      width: window.innerWidth,
+      selectedDataSourceName: 'Prod',
+      width: window.innerWidth,	
       height: window.innerHeight,
       target: '#wfb'
       });

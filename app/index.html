@@ -46,14 +46,12 @@
     <script>
       $(document).ready(function() {
       wfb = workflowBrowser({
-      dataSource: 'Prod',
       dataSources: [ 
-      {'name': 'DevAWS',             'host': 'http://54.173.15.205',  'dataUrl':'data/54.173.15.205.json'                   },
-      {'name': 'Dev03',              'host': 'http://52.0.241.39'  ,  'dataUrl':'data/52.0.241.39.json'                     },
-      {'name': 'Stage',              'host': 'http://54.85.122.143',  'dataUrl':'data/54.85.122.143.json'                   },
-      {'name': 'Stage (2015-03-13)', 'host': ''                    ,  'dataUrl':'data/snapshots/20150313/54.85.122.143.json'},
-      {'name': 'Prod',               'host': 'http://54.84.99.24'  ,  'dataUrl':'data/54.84.99.24.json'                     }
+      {'name': 'Dev',             'host': 'http://54.173.15.205',  'dataUrl':'data/54.173.15.205.json'                   },
+      {'name': 'Stage',           'host': 'http://54.85.122.143',  'dataUrl':'data/54.85.122.143.json'                   },
+      {'name': 'Prod',            'host': 'http://54.84.99.24'  ,  'dataUrl':'data/54.84.99.24.json'                     }
       ],
+      selectedDataSourceName: 'Prod',
       width: window.innerWidth,
       height: window.innerHeight,
       target: '#wfb'
