@@ -46,8 +46,6 @@
     <script>
       $(document).ready(function() {
       wfb = workflowBrowser({
-      title: "Matterhorn Workflows",
-      description: "This is a workflow browser graphic.",
       dataSource: 'Prod',
       dataSources: [ 
       {'name': 'DevAWS',             'host': 'http://54.173.15.205',  'init':'data/54.173.15.205.json'                   },
@@ -58,7 +56,6 @@
       ],
       width: window.innerWidth,
       height: window.innerHeight,
-      right: 1,
       target: '#wfb'
       });
       
