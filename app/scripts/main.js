@@ -10,6 +10,8 @@ function _createWorkflowBrowser(wfb,conf) {
     var width  = conf.width;
     var height = conf.height;
 
+    var resized = true;
+    
     wfb.dateStarted = null;
     wfb.dateCompleted = null;
 
@@ -513,6 +515,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	if (!arguments.length) {
 	    return [width,height];
 	}
+	resized= true;
 	width  = w;
 	height = h;
 	container.attr('width', width).attr('height', height);
@@ -522,6 +525,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	zoomPane.attr('width', width);
 	zoomPane.attr('height', height);
 	wfb.refresh();
+	resized= false;
 	return wfb;
     };
 
@@ -726,14 +730,20 @@ function _createWorkflowBrowser(wfb,conf) {
 	.append('rect')
 	.attr('class', 'operation')
         .style('stroke', function(o) { return stateColor(o.state,operationColor(o.id)); } )
-	.attr('y', function(o){ return scaledOperationY(o);})
-	.attr('height', function(o){return scaledOperationHeight(o);})
+	
 	.on('mouseover', opTip.show)
 	.on('mouseout',  opTip.hide)
 	.on('click', function(o) { if ( o.workflowState !== 'STOPPED') { window.open(workflowUrl(o.workflowId), '_blank'); } })
 	.style('fill', function(o) { return operationColor(o.id); })
 	;
-	// update
+	// update y
+	if ( resized ) {
+	    events
+		.attr('y', function(o){ return scaledOperationY(o);})
+		.attr('height', function(o){return scaledOperationHeight(o);})
+	    ;
+	}
+	// update x
 	events
 	.call(sizeEvents)
 	;
@@ -747,15 +757,19 @@ function _createWorkflowBrowser(wfb,conf) {
 	events.enter()
 	.append('circle')
 	.attr('class', 'workflow24')
-	.attr('cy', function(d){ return workflowY(d)+1; })
-	.attr('r', operationHeight/4)
 	.style('fill',  'red')
 	.style('stroke', 'red')
 	.style('opacity',0.6)
 	.on('mouseover', wf24Tip.show)
 	.on('mouseout', wf24Tip.hide)
 	;
-	// update
+	if (resized){
+	    events
+		.attr('cy', function(d){ return workflowY(d)+1; })
+		.attr('r', operationHeight/4)
+	    ;
+	}
+	// update x
 	events
 	.attr('cx', function(d) {return scale(d.date); })
 	;
@@ -769,7 +783,6 @@ function _createWorkflowBrowser(wfb,conf) {
 	events.enter()
 	.append('rect')
 	.attr('class', 'workflow')
-	.attr('y', function(wf){ return workflowY(wf); })
 	.attr('height', 2)
 	.on('mouseover', wfTip.show)
 	.on('mouseout', wfTip.hide)
@@ -777,7 +790,13 @@ function _createWorkflowBrowser(wfb,conf) {
 	.style('stroke', 'white')
 	.style('opacity',0.6)
 	;
-	// update
+	// update y
+	if (resized){
+	    events
+		.attr('y', function(wf){ return workflowY(wf); })
+	    ;
+	}
+	// update x
 	events
 	.call(sizeEvents)
 	;
@@ -791,14 +810,19 @@ function _createWorkflowBrowser(wfb,conf) {
 	events.enter()
 	.append('line')
 	.attr('class', 'daybounds')
-	.attr('y1', rulerHeight )
-	.attr('y2', height )
 	.style('stroke', 'gray')
 	.style('stroke-dasharray', '1,0,1')
 	.style('opacity',0.6)
 	.style('pointer-events', 'none')
 	;
-	// update
+	// update y
+	if (resized){
+	    events
+		.attr('y1', rulerHeight )
+		.attr('y2', height )
+	    ;
+	}
+	// update x
 	events
 	.attr('x1', function(d) {return scale(d); })
 	.attr('x2', function(d) {return scale(d); })
@@ -813,14 +837,20 @@ function _createWorkflowBrowser(wfb,conf) {
 	events.enter()
 	.append('rect')
 	.attr('class', 'offHours')
-	.attr('y', rulerHeight )
-	.attr('height', height-rulerHeight)
+
 	.style('fill',  '#f6f6f6')
 	.style('stroke', '#f6f6f6')
 	.style('opacity',0.6)
 	.style('pointer-events', 'none')
 	;
-	// update
+	// update y
+	if (resized){
+	    events
+	    	.attr('y', rulerHeight )
+		.attr('height', height-rulerHeight)
+	    ;
+	}
+	// update x
 	events
 	.call(sizeEvents)
 	;
@@ -829,6 +859,7 @@ function _createWorkflowBrowser(wfb,conf) {
     };
 
     renderEvents();
+    resized=false;
 
     wfb.refresh = function(){
 	updateXAxis();
