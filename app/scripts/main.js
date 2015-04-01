@@ -10,7 +10,7 @@ function _createWorkflowBrowser(wfb,conf) {
     var width  = conf.width;
     var height = conf.height;
 
-    wfb.operationColors= conf['operationColors'] || {'apply-acl':'#6baed6','tag':'#9ecae1','inspect':'#c6dbef','prepare-av':'#e6550d','compose':'#3182bd','waveform':'#fd8d3c','append':'#fdae6b','cleanup':'#fdd0a2','send-email':'#31a354','editor':'#74c476','image':'#a1d99b','segment-video':'#c7e9c0','segmentpreviews':'#756bb1','retract-engage':'#9e9ac8','publish-engage':'#bcbddc','test-local':'#dadaeb','zip':'#636363','execute-once':'#969696','archive':'#bdbdbd','error-resolution':'#d9d9d9','schedule':'#3182bd','capture':'#6baed6','ingest':'#9ecae1'};
+    wfb.operationColors= conf.operationColors || {'apply-acl':'#6baed6','tag':'#9ecae1','inspect':'#c6dbef','prepare-av':'#e6550d','compose':'#3182bd','waveform':'#fd8d3c','append':'#fdae6b','cleanup':'#fdd0a2','send-email':'#31a354','editor':'#74c476','image':'#a1d99b','segment-video':'#c7e9c0','segmentpreviews':'#756bb1','retract-engage':'#9e9ac8','publish-engage':'#bcbddc','test-local':'#dadaeb','zip':'#636363','execute-once':'#969696','archive':'#bdbdbd','error-resolution':'#d9d9d9','schedule':'#3182bd','capture':'#6baed6','ingest':'#9ecae1'};
 
     var resized = true;
     
