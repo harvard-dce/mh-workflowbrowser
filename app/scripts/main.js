@@ -872,7 +872,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	svg.selectAll('rect.operation').remove();
 	svg.selectAll('circle').remove();
 	processWorkflows();
-	renderEvents();
+	wfb.size(width,height);
     };
 
     // potentially slow, so we throttle it. Why doesn't this seem to make much of a difference?
