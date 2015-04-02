@@ -7,8 +7,11 @@
 	"app/styles/main.css"
     ],
   "ignore": [
-      "doc/.*",
-      "tests/.*",
+      "doc",
+      "app/data",
+      "*.txt",
+      "favicon.ico",
+      "test",
       "*.html",
       "*.git*",
       "*.md",
