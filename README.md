@@ -68,7 +68,7 @@ below, and point it at some real data.
 mh-workflowbrowser has been registered with bower, so you can install
 it into your bower project with:
 
-   % bower install mh-workflowbrowser --save
+    % bower install mh-workflowbrowser --save
 
 ## Configuration
 
