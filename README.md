@@ -47,17 +47,17 @@ Make sure you have installed npm, bower, and grunt.
 
 Then clone this repo.
 
-% git clone https://github.com/harvard-dce/mh-workflowbrowser.git
+     % git clone https://github.com/harvard-dce/mh-workflowbrowser.git
 
-% cd mh-workflowbrowser
+     % cd mh-workflowbrowser
 
-% npm install
+     % npm install
 
-% bower update
+     % bower update
 
-% grunt 
+     % grunt 
 
-% grunt serve
+     % grunt serve
 
 This should open a web browser pointed at the WFB on some sample data.
 
@@ -68,7 +68,7 @@ below, and point it at some real data.
 mh-workflowbrowser has been registered with bower, so you can install
 it into your bower project with:
 
-% bower install mh-workflowbrowser --save
+   % bower install mh-workflowbrowser --save
 
 ## Configuration
 
