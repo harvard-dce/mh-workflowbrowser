@@ -11,11 +11,11 @@
       "tests/.*",
       "*.html",
       "*.git*",
-      "*.md"
+      "*.md",
       ".*",
       "Gruntfile.js",
       "*.json"
-  ]
+  ],
   "keywords": [
     "matterhorn",
     "timeline",
