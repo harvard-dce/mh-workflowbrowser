@@ -1,9 +1,11 @@
 {
-  "name": "mh-workflowbrowser",
-  "main": [
-    "app/scripts/main.js",
-    "app/styles/main.css"
-  ],
+    "name": "mh-workflowbrowser",
+    "description": "Interactive visualization of Matterhorn workflows on zoomable timeline",
+    "license": "Apache-2.0",
+    "main": [
+	"app/scripts/main.js",
+	"app/styles/main.css"
+    ],
   "ignore": [
       "doc/.*",
       "tests/.*",
