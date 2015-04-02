@@ -1,6 +1,5 @@
 {
   "name": "mh-workflowbrowser",
-  "version": "0.1.0",
   "main": [
     "app/scripts/main.js",
     "app/styles/main.css"
