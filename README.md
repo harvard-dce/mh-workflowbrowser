@@ -47,15 +47,17 @@ Make sure you have installed npm, bower, and grunt.
 
 Then clone this repo.
 
-cd into the root directory
+% git clone https://github.com/harvard-dce/mh-workflowbrowser.git
 
-npm install
+% cd mh-workflowbrowser
 
-bower update
+% npm install
 
-grunt 
+% bower update
 
-grunt serve
+% grunt 
+
+% grunt serve
 
 This should open a web browser pointed at the WFB on some sample data.
 
@@ -63,8 +65,10 @@ To deploy, plop the contents of the generated dist directory on your
 webserver, diddle with the configuration in index.html as described
 below, and point it at some real data.
 
-At some point (very!) soon I will figure out how to distribute the WFB
-via bower.
+mh-workflowbrowser has been registered with bower, so you can install
+it into your bower project with:
+
+% bower install mh-workflowbrowser --save
 
 ## Configuration
 
