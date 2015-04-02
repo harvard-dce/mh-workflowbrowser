@@ -383,17 +383,18 @@ function _createWorkflowBrowser(wfb,conf) {
 	var d = nav.append('div').html('<select class="form-control" id="' + id + '"></select>');
 	d.classed(skinnyCol,true);
 	$.each(options, function(key, value) {
-		$('#'+id)
-		    .append($('<option>', { value : value.name })
-			    .text(value.name)); 
-	    });
+	    $('#'+id)
+		.append($('<option>', { value : value.name })
+			.text(value.name)); 
+	});
 	$('#'+id).val(selected);
 	$('#'+id).change(function(){
 	    conf.selectedDataSourceName = $('#'+id).val();
-		wfb = null;
-		//total reload.
-		workflowBrowser(conf);
-	    });
+	    //total reload.
+	    conf.height=height;
+	    conf.width =width;
+	    workflowBrowser(conf,wfb);
+	});
     };
 
     var createSelectionFilter = function(label,id,options,filterType){
@@ -882,10 +883,13 @@ function _createWorkflowBrowser(wfb,conf) {
 }
 
 
-function workflowBrowser(conf){
+function workflowBrowser(conf,wfb){
     'use strict';
-    var wfb = {};
+    if ( ! wfb ) {
+	wfb = {};
+    }
     wfb.dataSource = _.find(conf.dataSources,function(ds){ return ds.name === conf.selectedDataSourceName; });
+
     var dataUrl =  wfb.dataSource.dataUrl;
     d3.select(conf.target).html('<p class="wfb_loading">Loading workflow data...</p>');    
     d3.json(dataUrl, function(error,data) {
