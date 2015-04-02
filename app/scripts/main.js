@@ -730,7 +730,6 @@ function _createWorkflowBrowser(wfb,conf) {
 	.append('rect')
 	.attr('class', 'operation')
         .style('stroke', function(o) { return stateColor(o.state,operationColor(o.id)); } )
-	
 	.on('mouseover', opTip.show)
 	.on('mouseout',  opTip.hide)
 	.on('click', function(o) { if ( o.workflowState !== 'STOPPED') { window.open(workflowUrl(o.workflowId), '_blank'); } })

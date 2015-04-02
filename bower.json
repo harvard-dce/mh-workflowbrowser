@@ -5,6 +5,16 @@
     "app/scripts/main.js",
     "app/styles/main.css"
   ],
+  "ignore": [
+      "doc/.*",
+      "tests/.*",
+      "*.html",
+      "*.git*",
+      "*.md"
+      ".*",
+      "Gruntfile.js",
+      "*.json"
+  ]
   "keywords": [
     "matterhorn",
     "timeline",
