@@ -294,6 +294,63 @@ function _createWorkflowBrowser(wfb,conf) {
 	    });
     };
 
+    var processOperation = function(workflow,operation){
+	parseOperationDates(operation);
+	if ( operation.id === 'schedule' ) {
+	    attachScheduledDuration(workflow,operation);
+	}
+	if ( wfb.operationIds.indexOf(operation.id)===-1){
+	    wfb.operationIds.push(operation.id);
+	}
+	if (showOperation(operation)) {
+	    if (operation.dateStarted > operation.dateCompleted ) {
+		operation.note = 'Operation "started" is past "completed" time. Huh?';
+	    }
+	    if ( workflow.dateCompleted === null || workflow.dateCompleted < operation.dateCompleted) {
+		workflow.dateCompleted = operation.dateCompleted;
+	    }
+	    if ( workflow.dateStarted === null || workflow.dateStarted > operation.dateStarted ) {
+		workflow.dateStarted = operation.dateStarted;
+	    }
+	}
+    };
+    
+    var processWorkflow = function(workflow){
+	workflow.dateStarted =null;
+	workflow.dateCompleted = null;
+	if ( wfb.workflowStates.indexOf(workflow.state)===-1){
+	    wfb.workflowStates.push(workflow.state);
+	}
+	$.each(workflow.operations,function(operationI,operation){
+	    processOperation(workflow,operation);
+	});
+	if ( workflow.dateCompleted === null || workflow.dateStarted === null ) {
+	    delete workflow.dateCompleted;
+	    delete workflow.dataStarted;
+	}
+	if (showWorkflow(workflow)) {
+	    workflow.duration = workflow.dateCompleted.getTime() - workflow.dateStarted.getTime();
+	    workflows.push(workflow);
+	    $.each(workflow.operations,function(operationI,operation){
+		if (showOperation(operation)) {
+		    operation.count = operationI +1;
+		    operation.workflowOperationsCount = workflow.operations.length;
+		    operation.workflowId = workflow.id;
+		    operation.workflowState = workflow.state;
+		    operation.workflowMediaDuration = parseInt(workflow.mediapackage.duration);
+		    operation.duration = operation.dateCompleted.getTime() - operation.dateStarted.getTime();
+		    operation.performanceRatio = (operation.duration+0.0) / (operation.workflowMediaDuration+0.0);
+		    if (operation.workflowMediaDuration > wfb.maxMediaDuration) {
+			wfb.maxMediaDuration = operation.workflowMediaDuration;
+		    }
+		    operations.push(operation);
+		} else {
+		    // operation can legitimately not have dates: they're defined in the workflow, but they haven't happened yet.
+		}
+	    });
+	}
+    };
+    
     var processWorkflows = function(){
 	rows = [[]];
 	workflows = conf.workflows;
@@ -302,57 +359,9 @@ function _createWorkflowBrowser(wfb,conf) {
 	workflow24HourMarks = [];
 	workflows= [];
 	$.each(conf.workflows,function(i,workflow){
-		workflow.dateStarted =null;
-		workflow.dateCompleted = null;
-		if ( wfb.workflowStates.indexOf(workflow.state)===-1){
-		    wfb.workflowStates.push(workflow.state);
-		}
-		$.each(workflow.operations,function(operationI,operation){
-			parseOperationDates(operation);
-			if ( operation.id === 'schedule' ) {
-			    attachScheduledDuration(workflow,operation);
-			}
-			if ( wfb.operationIds.indexOf(operation.id)===-1){
-			    wfb.operationIds.push(operation.id);
-			}
-			if (showOperation(operation)) {
-			    if (operation.dateStarted > operation.dateCompleted ) {
-				operation.note = 'Operation "started" is past "completed" time. Huh?';
-			    }
-			    if ( workflow.dateCompleted === null || workflow.dateCompleted < operation.dateCompleted) {
-				workflow.dateCompleted = operation.dateCompleted;
-			    }
-			    if ( workflow.dateStarted === null || workflow.dateStarted > operation.dateStarted ) {
-				workflow.dateStarted = operation.dateStarted;
-			    }
-			}
-		    });
-		if ( workflow.dateCompleted === null || workflow.dateStarted === null ) {
-		    delete workflow.dateCompleted;
-		    delete workflow.dataStarted;
-		}
-		if (showWorkflow(workflow)) {
-		    workflow.duration = workflow.dateCompleted.getTime() - workflow.dateStarted.getTime();
-		    workflows.push(workflow);
-		    $.each(workflow.operations,function(operationI,operation){
-			    if (showOperation(operation)) {
-				operation.count = operationI +1;
-				operation.workflowOperationsCount = workflow.operations.length;
-				operation.workflowId = workflow.id;
-				operation.workflowState = workflow.state;
-				operation.workflowMediaDuration = parseInt(workflow.mediapackage.duration);
-				operation.duration = operation.dateCompleted.getTime() - operation.dateStarted.getTime();
-				operation.performanceRatio = (operation.duration+0.0) / (operation.workflowMediaDuration+0.0);
-				if (operation.workflowMediaDuration > wfb.maxMediaDuration) {
-				    wfb.maxMediaDuration = operation.workflowMediaDuration;
-				}
-				operations.push(operation);
-			    } else {
-				// operation can legitimately not have dates: they're defined in the workflow, but they haven't happened yet.
-			    }
-			});
-		}
-	    });
+	    processWorkflow(workflow);
+
+	});
 	setWorkflowDateAvailables(workflows);
 	workflows=_.filter(workflows,durationPredicate);
 	stackWorkflows(workflows);
