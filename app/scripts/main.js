@@ -3,7 +3,6 @@
 /*global workflowBrowser */
 /*jshint unused:false */
 
-
 function _createWorkflowBrowser(wfb,conf) {
     'use strict';
 
@@ -63,14 +62,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	    });
     }
 
-    var parseDate  = function(dateThing) {
-	if (dateThing) {
-	    return dateFormat.parse(dateThing);
-	}
-	return null;
-    };
-
-    var updateTimeSpan = function(parentSpan,object) {
+    var updateTimeSpan = function updateTimeSpan(parentSpan,object) {
 	if (object.hasOwnProperty('dateStarted')) {
 	    if (parentSpan.dateStarted === null || object.dateStarted < parentSpan.dateStarted ) {
 		parentSpan.dateStarted = object.dateStarted;
@@ -83,7 +75,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	}
     };
 
-    var parseOperationDates = function(object) {
+    var parseOperationDates = function parseOperationDates(object) {
 	if (object.hasOwnProperty('started')){
 	    object.dateStarted = new Date(object.started);
 	} 
@@ -103,7 +95,7 @@ function _createWorkflowBrowser(wfb,conf) {
     };
 
 
-    var getRow = function(event){
+    var getRow = function getRow(event){
 	var eventFits = true;
 	var eventRow  = -1;
 	if ( ! (event.dateStarted && event.dateCompleted )) {
@@ -136,14 +128,14 @@ function _createWorkflowBrowser(wfb,conf) {
 	}
     };
 
-    var makeMidnight = function(day){
+    var makeMidnight = function makeMidnight(day){
 	day.setHours(0);
 	day.setMinutes(0);
 	day.setSeconds(0);
 	return day;
     };
 
-    var calculateOffHours = function(){
+    var calculateOffHours = function calculateOffHours(){
 	var oh ={};
 	oh.dateCompleted = wfb.dateCompleted;
 	var d = new Date(wfb.dateStarted.getTime());
@@ -161,7 +153,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	midnights.push(makeMidnight(new Date(oh.dateCompleted.getTime())));
     };
 
-    var showOperation = function(operation){
+    var showOperation = function showOperation(operation){
 	// should we show this operation?
 	if (operation.hasOwnProperty('dateStarted') && operation.hasOwnProperty('dateCompleted')){
 	    if (wfb.visibleOperationIds.length === 0 || wfb.visibleOperationIds.indexOf(operation.id)>-1 ) {
@@ -171,7 +163,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	return false;
     };
 
-    var matchAny = function(pattern,strings){
+    var matchAny = function matchAny(pattern,strings){
 	var i;
 	for(i = 0; i < strings.length; i++) {
 	    if (pattern.test(strings[i])){
@@ -181,7 +173,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	return false;
     };
 
-    var showWorkflow = function(workflow){
+    var showWorkflow = function showWorkflow(workflow){
 	// should we show this workflow?
 	if (workflow.hasOwnProperty('dateStarted') && workflow.hasOwnProperty('dateCompleted')){
 	    // do any text filters knock it out?
@@ -209,7 +201,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	}
     };
 
-    var durationPredicate = function(workflow){
+    var durationPredicate = function durationPredicate(workflow){
 	if ( wfb.durationFilter ) {
 	    var f = wfb.durationFilter;
 	    if ( f.op === '*' ) {
@@ -232,7 +224,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	return true;
     };
 
-    var attachScheduledDuration = function(w){
+    var attachScheduledDuration = function attachScheduledDuration(w){
 	if (w.hasOwnProperty('configurations') && w.configurations.hasOwnProperty('configuration')) {
 	     $.each(w.configurations.configuration, function(i,c) {
 		     if ( c.key === 'schedule.start' ) {
@@ -249,7 +241,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	}
     };
 
-    var getDateAvailable = function(workflow){
+    var getDateAvailable = function getDateAvailable(workflow){
 	var dateAvailable = null;
 	$.each(workflow.operations,function(i,operation){
 		if (operation.id === 'archive' ) {
@@ -260,7 +252,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	return dateAvailable;
     };
 
-    var setWorkflowDateAvailables = function(workflows){
+    var setWorkflowDateAvailables = function setWorkflowDateAvailables(workflows){
 	$.each(workflows,function(i,workflow){
 		workflow.dateAvailable = getDateAvailable(workflow);
 		if ( workflow.dateAvailable && workflow.hasOwnProperty('scheduleStart')) {
@@ -269,7 +261,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	    });
     };
 
-    var setWorkflow24HourMarks = function(workflows) {
+    var setWorkflow24HourMarks = function setWorkflow24HourMarks(workflows) {
 	$.each(workflows,function(i,workflow){
 		if (workflow.hasOwnProperty('scheduleStart') ) {
 		    if ( workflow.dateAvailable ) {
@@ -283,7 +275,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	    });
     };
 
-    var stackWorkflows = function(workflows){
+    var stackWorkflows = function stackWorkflows(workflows){
 	workflows = _.sortBy(workflows, 'dateStarted');
 	$.each(workflows,function(i,workflow){
 		var row = getRow(workflow);		
@@ -294,7 +286,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	    });
     };
 
-    var processOperation = function(workflow,operation){
+    var processOperation = function processOperation(workflow,operation){
 	parseOperationDates(operation);
 	if ( operation.id === 'schedule' ) {
 	    attachScheduledDuration(workflow,operation);
@@ -315,7 +307,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	}
     };
     
-    var processWorkflow = function(workflow){
+    var processWorkflow = function processWorkflow(workflow){
 	workflow.dateStarted =null;
 	workflow.dateCompleted = null;
 	if ( wfb.workflowStates.indexOf(workflow.state)===-1){
@@ -351,7 +343,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	}
     };
     
-    var processWorkflows = function(){
+    var processWorkflows = function processWorkflows(){
 	rows = [[]];
 	workflows = conf.workflows;
 	//console.log('workflows loaded: ' + workflows.length);
@@ -390,7 +382,7 @@ function _createWorkflowBrowser(wfb,conf) {
     var skinnyCol = 'col-xs-6 col-sm-4 col-md-2';
     var fatCol    = 'col-xs-6 col-sm-3 col-md-2';
 
-    var createSelectionLoader = function(label,id,options,selected){
+    var createSelectionLoader = function createSelectionLoader(label,id,options,selected){
 	var d = nav.append('div').html('<select class="form-control" id="' + id + '"></select>');
 	d.classed(skinnyCol,true);
 	$.each(options, function(key, value) {
@@ -408,7 +400,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	});
     };
 
-    var createSelectionFilter = function(label,id,options,filterType){
+    var createSelectionFilter = function createSelectionFilter(label,id,options,filterType){
 	var d = nav.append('div').html('<select multiple  id="' + id + '"></select>');
 	d.classed(fatCol,true);
 	$.each(options, function(key, value) {   
@@ -432,7 +424,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	    });
     };
 
-    var createScaleSwitch = function(){
+    var createScaleSwitch = function createScaleSwitch(){
 	var id='scaleSwitch';
 	var d = nav.append('div').html('<select class="form-control" id="' + id + '"></select>');
 	d.classed(fatCol,true);
@@ -445,7 +437,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	    });
     };
 
-    var createTextFilter = function(){
+    var createTextFilter = function createTextFilter(){
 	var id='textFilter';
 	var d = nav.append('div').html('<input class="form-control" type="text" placeholder="text filter (id,series,title,ca,producer,lecturer)" id="' + id + '">');
 	d.classed(fatCol,true);
@@ -455,7 +447,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	    });
     };
 
-    var createDurationFilter = function(){
+    var createDurationFilter = function createDurationFilter(){
 	var id='durationFilter';
 	var d = nav.append('div').html('<select class="form-control" id="' + id + '"></select>');
 	d.classed(fatCol,true);
@@ -542,15 +534,15 @@ function _createWorkflowBrowser(wfb,conf) {
 	return wfb;
     };
 
-    var stateColor = function(state,defaultColor) {
+    var stateColor = function stateColor(state,defaultColor) {
 	return _.result(wfb.stateColors,state,defaultColor);
     };
 
-    var operationColor = function(operationId){
+    var operationColor = function operationColor(operationId){
 	return _.result(wfb.operationColors,operationId,'black');
     };
 
-    var toHHMMSS = function (secNum) {
+    var toHHMMSS = function toHHMMSS(secNum) {
 	var hours   = Math.floor(secNum / 3600);
 	var minutes = Math.floor((secNum - (hours * 3600)) / 60);
 	var seconds = Math.floor(secNum - (hours * 3600) - (minutes * 60));
@@ -584,7 +576,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	    });
     svg.call(opTip);
 
-    var tipline = function(key,value,color){
+    var tipline = function tipline(key,value,color){
 	var line = '<div><strong>' + key + ': </strong> <span';
 	if (color) {
 	   line += ' style="color: ' + color + '" ';
@@ -593,7 +585,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	return line;
     };
 
-    var extractMediaDurations = function(d) {
+    var extractMediaDurations = function extractMediaDurations(d) {
 	var html = '';
 	if ( d.mediapackage.hasOwnProperty('duration') ) {
 	    html += tipline('Media Duration', toHHMMSS(d.mediapackage.duration/1000));
@@ -661,7 +653,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	    return 'n';
 	});
 
-    var setOperationHeight = function(){
+    var setOperationHeight = function setOperationHeight(){
 	maxOperationHeight = 28;
 	operationHeight = (height - rulerHeight) / rows.length;
 	if (operationHeight < minOperationHeight ) {
@@ -671,18 +663,18 @@ function _createWorkflowBrowser(wfb,conf) {
 	}
     };
 
-    var workflowUrl = function(workflowId) {
+    var workflowUrl = function workflowUrl(workflowId) {
 	return wfb.dataSource.host + '/admin/index.html#/inspect?id=' + workflowId;
     };
 
-    var sizeEvents = function (events){
+    var sizeEvents = function sizeEvents(events){
 	// [re]size operations and workflow wfbs 
 	return events
 	.attr('x', function(o){return scale(o.dateStarted);})
 	.attr('width', function(o){return d3.max([2,scale(o.dateCompleted) - scale(o.dateStarted)]);});
     };
 
-    var renderEvents = function(){
+    var renderEvents = function renderEvents(){
 	setOperationHeight();
 	renderOffHours(offHours);
 	renderMidnights(midnights);
@@ -691,7 +683,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	render24HourMarks(workflow24HourMarks);
     };
 
-    var scaledOperationHeight = function(o){
+    var scaledOperationHeight = function scaledOperationHeight(o){
 	if ( wfb.scaleByMediaDuration ) {
 	    return Math.max(4,operationHeight* (parseInt(o.workflowMediaDuration)/parseInt(wfb.maxMediaDuration)));
 	} else {
@@ -699,11 +691,11 @@ function _createWorkflowBrowser(wfb,conf) {
 	}
     };
 
-    var workflowY = function(wf){
+    var workflowY = function workflowY(wf){
 	return rulerHeight + (operationHeight/2.0) + wf.row * (operationHeight+2) -1;
     };
 
-    var scaledOperationY   = function(o) {
+    var scaledOperationY   = function scaledOperationY(o) {
 	var rowY = rulerHeight+ (o.row * (operationHeight+2));
 	if (wfb.scaleByMediaDuration ) {
 	    return workflowY(o)-(scaledOperationHeight(o)/2)+1;
@@ -712,7 +704,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	}
     };
 
-    var renderOperations = function(ops){
+    var renderOperations = function renderOperations(ops){
 	wfb.operations=ops;
 	var events = svg.selectAll('rect.operation').data(ops);
 	// enter
@@ -740,7 +732,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	events.exit().remove();
     };
 
-    var render24HourMarks = function(workflow24HourMarks){
+    var render24HourMarks = function render24HourMarks(workflow24HourMarks){
 	// enter
 	var events = svg.selectAll('circle.workflow24').data(workflow24HourMarks);
 	events.enter()
@@ -766,7 +758,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	events.exit().remove();
     };
 
-    var renderWorkflows = function(workflows){
+    var renderWorkflows = function renderWorkflows(workflows){
 	// enter
 	var events = svg.selectAll('rect.workflow').data(workflows);
 	events.enter()
@@ -793,7 +785,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	events.exit().remove();
     };
 
-    var renderMidnights = function(midnights){
+    var renderMidnights = function renderMidnights(midnights){
 	// enter
 	var events = svg.selectAll('line.daybounds').data(midnights);
 	events.enter()
@@ -820,7 +812,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	events.exit().remove();
     };
 
-    var renderOffHours = function(offHours){
+    var renderOffHours = function renderOffHours(offHours){
 	// enter
 	var events = svg.selectAll('rect.offHours').data(offHours);
 	events.enter()
@@ -855,7 +847,7 @@ function _createWorkflowBrowser(wfb,conf) {
 	renderEvents();
     };
 
-    var rawReload = function(){
+    var rawReload = function rawReload(){
 	console.log('reloading workflow browser data...');
 	svg.selectAll('rect.workflow').remove();
 	svg.selectAll('rect.operation').remove();
