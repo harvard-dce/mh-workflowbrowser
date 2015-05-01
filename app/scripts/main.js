@@ -395,14 +395,11 @@ function _createWorkflowBrowser(conf,wfb) {
 
   var addUpdateWorkflows = function addUpdateWorkflows(wfs){
     var addUpdateIds = _.map(wfs,function(wf){return wf.id;});
-    console.log("A:" + conf.workflows.length);
     conf.workflows = _.reject(conf.workflows,
                               function(wf){
                                 return _.contains(addUpdateIds,wf.id);
                               });
-    console.log("B: " + conf.workflows.length);
     conf.workflows = conf.workflows.concat(wfs);
-    console.log("C: " + conf.workflows.length);
     rawReload();
   };
 
@@ -752,16 +749,17 @@ function _createWorkflowBrowser(conf,wfb) {
 
   var scaledOperationHeight = function scaledOperationHeight(o){
     if ( wfb.scaleByMediaDuration ) {
-      return Math.max(4,operationHeight* (parseInt(o.workflowMediaDuration)
-                                          /parseInt(wfb.maxMediaDuration)));
+      return Math.max(4,operationHeight *
+                      (parseInt(o.workflowMediaDuration)/
+                       parseInt(wfb.maxMediaDuration)));
     } else {
       return operationHeight;
     }
   };
 
   var workflowY = function workflowY(wf){
-    return rulerHeight + (operationHeight/2.0)
-      + wf.row * (operationHeight+2) -1;
+    return rulerHeight + (operationHeight/2.0) +
+      wf.row * (operationHeight+2) -1;
   };
 
   var scaledOperationY   = function scaledOperationY(o) {
@@ -776,7 +774,7 @@ function _createWorkflowBrowser(conf,wfb) {
   var renderOperations = function renderOperations(ops){
     wfb.operations=ops;
     // bind data
-    var events = svg.selectAll('rect.operation').data(ops);
+    var events = svg.selectAll('rect.operation').data(ops, function(d){return d.job; });
     // enter
     events.enter()
       .append('rect')
