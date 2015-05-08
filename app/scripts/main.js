@@ -830,7 +830,7 @@ function _createWorkflowBrowser(conf,wfb) {
 
   var renderWorkflows = function renderWorkflows(workflows){
     // enter
-    var events = svg.selectAll('rect.workflow').data(workflows);
+    var events = svg.selectAll('rect.workflow').data(workflows,function(d){return d.id;});
     events.enter()
       .append('rect')
       .attr('class', 'workflow')
