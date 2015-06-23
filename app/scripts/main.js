@@ -694,7 +694,8 @@ function _createWorkflowBrowser(conf,wfb) {
           tipline('Class Start to Available Duration',
                   d.classStartToAvailableDuration ?
                   toHHMMSS(d.classStartToAvailableDuration/1000) : 'NA') +
-          extractMediaDurations(d)
+          extractMediaDurations(d) +
+          tipline('row', (d.row + 1) ' of ' + rows.length)
         ;
       });
   svg.call(wfTip);
