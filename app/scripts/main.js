@@ -630,7 +630,7 @@ function _createWorkflowBrowser(conf,wfb) {
           tipline('Media Duration (trimmed)',
                   toHHMMSS(d.workflowMediaDuration/1000)) +
           tipline('Performance Ratio', d.performanceRatio.toFixed(2)) +
-          tipline('row', (d.row + 1) + ' of ' + rows.length)
+          tipline('Row', (d.row + 1) + ' of ' + rows.length)
         ;
 
       });
@@ -696,7 +696,7 @@ function _createWorkflowBrowser(conf,wfb) {
                   d.classStartToAvailableDuration ?
                   toHHMMSS(d.classStartToAvailableDuration/1000) : 'NA') +
           extractMediaDurations(d) +
-          tipline('row', (d.row + 1) + ' of ' + rows.length)
+          tipline('Row', (d.row + 1) + ' of ' + rows.length)
         ;
       });
   svg.call(wfTip);
