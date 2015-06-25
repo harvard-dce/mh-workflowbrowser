@@ -13,7 +13,18 @@ function _createWorkflowBrowser(conf,wfb) {
   var width  = conf.width;
   var height = conf.height;
 
-  wfb.operationColors= conf.operationColors || {'apply-acl':'#6baed6','tag':'#9ecae1','inspect':'#c6dbef','prepare-av':'#e6550d','compose':'#3182bd','waveform':'#fd8d3c','append':'#fdae6b','cleanup':'#fdd0a2','send-email':'#31a354','editor':'#74c476','image':'#a1d99b','segment-video':'#c7e9c0','segmentpreviews':'#756bb1','retract-engage':'#9e9ac8','publish-engage':'#bcbddc','test-local':'#dadaeb','zip':'#636363','execute-once':'#969696','archive':'#bdbdbd','error-resolution':'#d9d9d9','schedule':'#3182bd','capture':'#6baed6','ingest':'#9ecae1'};
+  wfb.visibleOperationIds = [];
+  
+  wfb.operationConf = conf.operationConf || {'apply-acl':{'color':'#6baed6'},'tag':{'color':'#9ecae1'},'inspect':{'color':'#c6dbef'},'prepare-av':{'color':'#e6550d'},'compose':{'color':'#3182bd'},'waveform':{'color':'#fd8d3c'},'append':{'color':'#fdae6b'},'cleanup':{'color':'#fdd0a2'},'send-email':{'color':'#31a354'},'editor':{'color':'#74c476'},'image':{'color':'#a1d99b'},'segment-video':{'color':'#c7e9c0'},'segmentpreviews':{'color':'#756bb1'},'retract-engage':{'color':'#9e9ac8'},'publish-engage':{'color':'#bcbddc'},'test-local':{'color':'#dadaeb'},'zip':{'color':'#636363'},'execute-once':{'color':'#969696'},'archive':{'color':'#bdbdbd'},'error-resolution':{'color':'#d9d9d9'},'schedule':{'color':'#3182bd', 'visible':false},'capture':{'color':'#6baed6'},'ingest':{'color':'#9ecae1'}};
+
+  $.each(wfb.operationConf,function(id,props){
+    if ( ! props.hasOwnProperty('visible') ) {
+      props.visible=true;
+    }
+    if (wfb.operationConf[id].visible){
+      wfb.visibleOperationIds.push(id);
+    }
+  });
 
   wfb.stateColors= conf.stateColors || { 'FAILED': 'red','STOPPED': 'orange','PAUSED':'#e6e600', 'RUNNING': '#756bb1', 'SUCCEEDED': 'grey', 'SKIPPED': 'grey'};
 
@@ -26,7 +37,7 @@ function _createWorkflowBrowser(conf,wfb) {
   wfb.maxMediaDuration =0;
   wfb.scaleByMediaDuration = true;
 
-  wfb.visibleOperationIds = [];
+
   wfb.visibleWorkflowStates = [];
   wfb.visibleWorkflowIds = [];
   var textFilter = '';
@@ -379,8 +390,7 @@ function _createWorkflowBrowser(conf,wfb) {
     setWorkflowDateAvailables(workflows);
     workflows=_.filter(workflows,durationPredicate);
     stackWorkflows(workflows);
-    if ( wfb.visibleOperationIds.length === 0 ||
-         wfb.visibleOperationIds.length === wfb.operationIds.length) {
+    if ( true ) {
       setWorkflow24HourMarks(workflows);
     }
     // now weed out operations that haven't passed duration filter. messy.
@@ -455,8 +465,15 @@ function _createWorkflowBrowser(conf,wfb) {
           'div').html('<select multiple  id="' + id + '"></select>');
     d.classed(fatCol,true);
     $.each(options, function(key, value) {
+      var props = { value : value };
+      // hack
+      if (filterType === 'visibleOperationIds' ) {
+        if (wfb.operationConf.hasOwnProperty(value) && wfb.operationConf[value].visible){
+          props.selected = 'selected';
+        }
+      }
       $('#'+id)
-        .append($('<option>', { value : value })
+        .append($('<option>', props)
                 .text(value));
     });
     $('#'+id).multiselect({
@@ -596,9 +613,11 @@ function _createWorkflowBrowser(conf,wfb) {
   };
 
   var operationColor = function operationColor(operationId){
-    return _.result(wfb.operationColors,operationId,'black');
+    var opconf = wfb.operationConf[operationId] || { 'color': 'black' };
+    return opconf.color;
   };
 
+  
   var toHHMMSS = function toHHMMSS(secNum) {
     var hours   = Math.floor(secNum / 3600);
     var minutes = Math.floor((secNum - (hours * 3600)) / 60);
