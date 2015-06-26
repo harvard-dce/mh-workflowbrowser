@@ -58,7 +58,8 @@ function _createWorkflowBrowser(conf,wfb) {
 
   var offHours   = [];
   var midnights  = [];
-
+  var op2wf = {};
+  
   var twentyFourHoursInMs = 24*60*60*1000;
 
   // rationalize data workflow data structure if getting straight from MH.
@@ -335,6 +336,7 @@ function _createWorkflowBrowser(conf,wfb) {
         workflow.dateStarted = operation.dateStarted;
       }
     }
+    op2wf[operation.job]=workflow;
   };
 
   var processWorkflow = function processWorkflow(workflow){
@@ -631,27 +633,23 @@ function _createWorkflowBrowser(conf,wfb) {
 
   // todo: rationalize tooltips.
 
-  var toolTipSpace=175;
+  var toolTipSpace=400;
 
   var opTip = d3.tip()
       .attr('class', 'd3-tip')
       .offset(function(d){
         return d3.mouse(this)[1]<toolTipSpace ? [10,-10] : [-10, 0]; } )
       .html(function(d) {
-        return tipline('Operation ID',d.id, operationColor(d.id)) +
-          tipline('Workflow ID', d.workflowId) +
-          tipline('Number', d.count + ' of ' + d.workflowOperationsCount) +
+        return commonTip(op2wf[d.job]) + '<hr />' + '<div style="text-align:center;">Operation</div>'+
+          tipline('ID',d.id, operationColor(d.id)) +
           tipline('Description', d.description) +
           tipline('State',d.state,stateColor(d.state,'white'))+
           tipline('Started', d.dateStarted)+
           tipline('Completed', d.dateCompleted) +
           tipline('Duration', toHHMMSS(d.duration/1000)) +
-          tipline('Media Duration (trimmed)',
-                  toHHMMSS(d.workflowMediaDuration/1000)) +
           tipline('Performance Ratio', d.performanceRatio.toFixed(2)) +
-          tipline('Row', (d.row + 1) + ' of ' + rows.length)
+           tipline('Number', d.count + ' of ' + d.workflowOperationsCount) 
         ;
-
       });
   svg.call(opTip);
 
@@ -696,12 +694,9 @@ function _createWorkflowBrowser(conf,wfb) {
   ;
   svg.call(wf24Tip);
 
-  var wfTip = d3.tip()
-      .attr('class', 'd3-tip')
-      .offset(function(d){
-        return d3.mouse(this)[1]<toolTipSpace ? [10,-10] : [-10, 0];})
-      .html(function(d) {
-        return tipline('Workflow ID', d.id) +
+  var commonTip = function commonTip(d){
+    return '<div style="text-align:center;">Workflow</div>' +
+          tipline('ID', d.id) +
           tipline('Series',  d.mediapackage.seriestitle) +
           tipline('Title', d.mediapackage.title) +
           tipline('State',d.state, stateColor(d.state,'white')) +
@@ -714,8 +709,17 @@ function _createWorkflowBrowser(conf,wfb) {
           tipline('Class Start to Available Duration',
                   d.classStartToAvailableDuration ?
                   toHHMMSS(d.classStartToAvailableDuration/1000) : 'NA') +
-          extractMediaDurations(d) +
+          //extractMediaDurations(d) +
           tipline('Row', (d.row + 1) + ' of ' + rows.length)
+
+  }
+
+  var wfTip = d3.tip()
+      .attr('class', 'd3-tip')
+      .offset(function(d){
+        return d3.mouse(this)[1]<toolTipSpace ? [10,-10] : [-10, 0];})
+      .html(function(d) {
+        return commonTip(d)
         ;
       });
   svg.call(wfTip);
