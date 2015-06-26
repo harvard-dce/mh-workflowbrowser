@@ -631,7 +631,7 @@ function _createWorkflowBrowser(conf,wfb) {
     return time;
   };
 
-  // todo: rationalize tooltips.
+  // todo: tooltip placement is hacky.
 
   var toolTipSpace=400;
 
@@ -710,9 +710,9 @@ function _createWorkflowBrowser(conf,wfb) {
                   d.classStartToAvailableDuration ?
                   toHHMMSS(d.classStartToAvailableDuration/1000) : 'NA') +
           //extractMediaDurations(d) +
-          tipline('Row', (d.row + 1) + ' of ' + rows.length)
+          tipline('Row', (d.row + 1) + ' of ' + rows.length);
 
-  }
+  };
 
   var wfTip = d3.tip()
       .attr('class', 'd3-tip')
