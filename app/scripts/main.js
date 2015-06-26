@@ -15,7 +15,7 @@ function _createWorkflowBrowser(conf,wfb) {
 
   wfb.visibleOperationIds = [];
   
-  wfb.operationConf = conf.operationConf || {'apply-acl':{'color':'#6baed6'},'tag':{'color':'#9ecae1'},'inspect':{'color':'#c6dbef'},'prepare-av':{'color':'#e6550d'},'compose':{'color':'#3182bd'},'waveform':{'color':'#fd8d3c'},'append':{'color':'#fdae6b'},'cleanup':{'color':'#fdd0a2'},'send-email':{'color':'#31a354'},'editor':{'color':'#74c476'},'image':{'color':'#a1d99b'},'segment-video':{'color':'#c7e9c0'},'segmentpreviews':{'color':'#756bb1'},'retract-engage':{'color':'#9e9ac8'},'publish-engage':{'color':'#bcbddc'},'test-local':{'color':'#dadaeb'},'zip':{'color':'#636363'},'execute-once':{'color':'#969696'},'archive':{'color':'#bdbdbd'},'error-resolution':{'color':'#d9d9d9'},'schedule':{'color':'#3182bd', 'visible':false},'capture':{'color':'#6baed6'},'ingest':{'color':'#9ecae1'}};
+  wfb.operationConf = conf.operationConf || {'apply-acl':{'color':'#6baed6'},'tag':{'color':'#9ecae1'},'inspect':{'color':'#c6dbef'},'prepare-av':{'color':'#e6550d'},'compose':{'color':'#3182bd'},'waveform':{'color':'#fd8d3c'},'append':{'color':'#fdae6b'},'cleanup':{'color':'#fdd0a2'},'send-email':{'color':'#31a354','boost':1 },'editor':{'color':'#74c476'},'image':{'color':'#a1d99b'},'segment-video':{'color':'#c7e9c0'},'segmentpreviews':{'color':'#756bb1'},'retract-engage':{'color':'#9e9ac8'},'publish-engage':{'color':'#bcbddc'},'test-local':{'color':'#dadaeb'},'zip':{'color':'#636363'},'execute-once':{'color':'#969696'},'archive':{'color':'#bdbdbd'},'error-resolution':{'color':'#d9d9d9'},'schedule':{'color':'#3182bd', 'visible':false},'capture':{'color':'#6baed6'},'ingest':{'color':'#9ecae1'}};
 
   $.each(wfb.operationConf,function(id,props){
     if ( ! props.hasOwnProperty('visible') ) {
@@ -48,7 +48,7 @@ function _createWorkflowBrowser(conf,wfb) {
 
   var target = conf.target;
   var dateFormat = d3.time.format('%Y-%m-%dT%X');
-  var workflows, operations, workflow24HourMarks;
+  var workflows, operations, workflow24HourMarks, lateTrimMarks;
   var rows =[[]];
 
   var maxOperationHeight = 0;
@@ -61,6 +61,8 @@ function _createWorkflowBrowser(conf,wfb) {
   var op2wf = {};
   
   var twentyFourHoursInMs = 24*60*60*1000;
+  var lateTrimHours = 7;
+  var lateTrimMs = lateTrimHours*60*60*1000;
 
   // rationalize data workflow data structure if getting straight from MH.
   if (conf.workflows.hasOwnProperty('workflows') ) {
@@ -271,20 +273,36 @@ function _createWorkflowBrowser(conf,wfb) {
   var getDateAvailable = function getDateAvailable(workflow){
     var dateAvailable = null;
     $.each(workflow.operations,function(i,operation){
-      if (operation.id === 'archive' ) {
-        dateAvailable = operation.dateStarted;
+      if (operation.id === 'publish-engage' && operation.description.includes('external')) {
+        dateAvailable = operation.dateCompleted;
         return;
       }
     });
     return dateAvailable;
   };
 
+  var getDateReadyForTrim = function getDateReadyForTrim(workflow){
+    var dateReadyForTrim = null;
+    $.each(workflow.operations,function(i,operation){
+      if (operation.id === 'send-email' && operation.description.includes('holding for edit')){
+        dateReadyForTrim = operation.dateCompleted;
+        return;
+      }
+    });
+    return dateReadyForTrim;
+  };
+
   var setWorkflowDateAvailables = function setWorkflowDateAvailables(workflows){
     $.each(workflows,function(i,workflow){
       workflow.dateAvailable = getDateAvailable(workflow);
+      workflow.dateReadyForTrim = getDateReadyForTrim(workflow);
       if ( workflow.dateAvailable && workflow.hasOwnProperty('scheduleStart')) {
         workflow.classStartToAvailableDuration =
           workflow.dateAvailable.getTime() - workflow.scheduleStart.getTime();
+      }
+       if ( workflow.dateReadyForTrim && workflow.hasOwnProperty('scheduleStart')) {
+        workflow.untilReadyForTrimDuration =
+          workflow.dateReadyForTrim.getTime() - workflow.scheduleStart.getTime();
       }
     });
   };
@@ -298,6 +316,21 @@ function _createWorkflowBrowser(conf,wfb) {
               workflow.dateStarted.getTime()+twentyFourHoursInMs);
             var mark = {'date': startPlus24, 'row': workflow.row };
             workflow24HourMarks.push(mark);
+          }
+        }
+      }
+    });
+  };
+
+  var setLateTrimMarks = function setLateTrimMarks(workflows) {
+    $.each(workflows,function(i,workflow){
+      if (workflow.hasOwnProperty('scheduleStart') ) {
+        if ( workflow.dateReadyForTrim ) {
+          if (workflow.untilReadyForTrimDuration > lateTrimMs) {
+            var startPlusLateTrimMs = new Date(
+              workflow.scheduleStart.getTime()+lateTrimMs);
+            var mark = {'date': startPlusLateTrimMs, 'row': workflow.row };
+            lateTrimMarks.push(mark);
           }
         }
       }
@@ -386,6 +419,7 @@ function _createWorkflowBrowser(conf,wfb) {
     workflows = [];
     operations = [];
     workflow24HourMarks = [];
+    lateTrimMarks =[];
     $.each(wfs,function(i,workflow){
       processWorkflow(workflow);
     });
@@ -394,6 +428,7 @@ function _createWorkflowBrowser(conf,wfb) {
     stackWorkflows(workflows);
     if ( true ) {
       setWorkflow24HourMarks(workflows);
+      setLateTrimMarks(workflows);
     }
     // now weed out operations that haven't passed duration filter. messy.
     var visibleWorkflowIds = _.pluck(workflows,'id');
@@ -528,9 +563,11 @@ function _createWorkflowBrowser(conf,wfb) {
     d.classed(fatCol,true);
     var durationFilters = [
       {'name': 'All Durations','op':'*' },
-      {'name': 'Start to Available <= 24 Hours','field': 'classStartToAvailableDuration','op':'<=', 'val':24},
-      {'name': 'Start to Available > 24 Hours','field': 'classStartToAvailableDuration','op':'>', 'val':24},
-      {'name': 'Start to Available > 48 Hours','field': 'classStartToAvailableDuration','op':'>', 'val':48},
+      {'name': 'Start until Available <= 24 Hours','field': 'classStartToAvailableDuration','op':'<=', 'val':24},
+      {'name': 'Start until Available > 24 Hours','field': 'classStartToAvailableDuration','op':'>', 'val':24},
+      {'name': 'Start until Available > 48 Hours','field': 'classStartToAvailableDuration','op':'>', 'val':48},
+      {'name': 'Start until Ready for Trim <= ' + lateTrimHours +' Hours','field': 'untilReadyForTrimDuration','op':'<=', 'val':lateTrimHours},
+      {'name': 'Start until Ready for Trim > '+ lateTrimHours + ' Hours','field': 'untilReadyForTrimDuration','op':'>', 'val':lateTrimHours},
       {'name': 'Entire Workflow <= 24 Hours','field': 'duration','op':'<=', 'val':24},
       {'name': 'Entire Workflow > 24 Hours','field': 'duration','op':'>', 'val':24},
       {'name': 'Entire Workflow > 48 Hours','field': 'duration','op':'>', 'val':48}
@@ -687,15 +724,26 @@ function _createWorkflowBrowser(conf,wfb) {
     }
   };
 
-  var wf24Tip = d3.tip()
+  var lateAvailableTip = d3.tip()
       .attr('class', 'd3-tip')
       .offset([-10,0])
       .html('This lecture failed to meet 24 hour turnaround!')
   ;
-  svg.call(wf24Tip);
+  svg.call(lateAvailableTip);
 
-  var startToAvailableColor = function startToAvailableColor(durationMS){
+  var lateTrimTip = d3.tip()
+      .attr('class', 'd3-tip')
+      .offset([-10,0])
+      .html('This lecture was not ready for trim within ' + lateTrimHours + ' hours!')
+  ;
+  svg.call(lateTrimTip);
+
+  var untilAvailableColor = function startToAvailableColor(durationMS){
     return durationMS > (24*60*60*1000) ? 'red' : 'white';
+  };
+
+  var untilReadyForTrimColor = function startToAvailableColor(durationMS){
+    return durationMS > lateTrimMs ? 'orange' : 'white';
   };
 
   var commonTip = function commonTip(d){
@@ -710,10 +758,12 @@ function _createWorkflowBrowser(conf,wfb) {
           tipline('Workflow Duration',  toHHMMSS(d.duration/1000)) +
           tipline('Scheduled Duration', d.scheduleDuration ?
                   toHHMMSS(d.scheduleDuration/1000) : 'NA') +
-          tipline('Class Start to Available Duration',
+          tipline('Lecture Start to Available Duration',
                   d.classStartToAvailableDuration ?
-                  toHHMMSS(d.classStartToAvailableDuration/1000) : 'NA', startToAvailableColor(d.classStartToAvailableDuration))+
-          //extractMediaDurations(d) +
+                  toHHMMSS(d.classStartToAvailableDuration/1000) : 'NA', untilAvailableColor(d.classStartToAvailableDuration))+
+          tipline('Lecture Start to Ready for Trim Duration',
+                  d.untilReadyForTrimDuration ?
+                  toHHMMSS(d.untilReadyForTrimDuration/1000) : 'NA', untilReadyForTrimColor(d.untilReadyForTrimDuration))+
           tipline('Row', (d.row + 1) + ' of ' + rows.length);
 
   };
@@ -776,15 +826,19 @@ function _createWorkflowBrowser(conf,wfb) {
     renderWorkflows(workflows);
     renderOperations(operations);
     render24HourMarks(workflow24HourMarks);
+    renderLateTrimMarks(lateTrimMarks);
   };
 
   var scaledOperationHeight = function scaledOperationHeight(o){
+    var boost = wfb.operationConf.hasOwnProperty(o.id) ? wfb.operationConf[o.id].boost : 0;
+    boost = boost ? boost : 0;
+    boost*=4;
     if ( wfb.scaleByMediaDuration ) {
       return Math.max(4,operationHeight *
                       (parseInt(o.workflowMediaDuration)/
-                       parseInt(wfb.maxMediaDuration)));
+                       parseInt(wfb.maxMediaDuration)))+boost;
     } else {
-      return operationHeight;
+      return operationHeight+boost;
     }
   };
 
@@ -795,10 +849,12 @@ function _createWorkflowBrowser(conf,wfb) {
 
   var scaledOperationY   = function scaledOperationY(o) {
     var rowY = rulerHeight+ (o.row * (operationHeight+2));
+    var boost = wfb.operationConf.hasOwnProperty(o.id) ? wfb.operationConf[o.id].boost : 0;
+     boost = boost ? boost : 0;
     if (wfb.scaleByMediaDuration ) {
-      return workflowY(o)-(scaledOperationHeight(o)/2)+1;
+      return workflowY(o)-(scaledOperationHeight(o)/2)+1+-boost;
     } else {
-      return rowY;
+      return rowY-boost;
     }
   };
 
@@ -833,17 +889,25 @@ function _createWorkflowBrowser(conf,wfb) {
     events.exit().remove();
   };
 
-  var render24HourMarks = function render24HourMarks(workflow24HourMarks){
+  var render24HourMarks = function render24HourMarks(marks){
+    renderLateMarks(marks,'workflow24','red',lateAvailableTip);
+  };
+
+  var renderLateTrimMarks = function renderLateTrimMarks(marks){
+    renderLateMarks(marks,'lateTrim','orange',lateTrimTip);
+  };
+
+  var renderLateMarks = function renderLateMarks(marks,classname,color,tip){
     // enter
-    var events = svg.selectAll('circle.workflow24').data(workflow24HourMarks);
+    var events = svg.selectAll('circle.'+classname).data(marks);
     events.enter()
       .append('circle')
-      .attr('class', 'workflow24')
-      .style('fill',  'red')
-      .style('stroke', 'red')
+      .attr('class', classname)
+      .style('fill',  color)
+      .style('stroke', color)
       .style('opacity',0.6)
-      .on('mouseover', wf24Tip.show)
-      .on('mouseout', wf24Tip.hide)
+      .on('mouseover', tip.show)
+      .on('mouseout', tip.hide)
     ;
     if (resized){
       events
