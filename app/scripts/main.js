@@ -694,6 +694,10 @@ function _createWorkflowBrowser(conf,wfb) {
   ;
   svg.call(wf24Tip);
 
+  var startToAvailableColor = function startToAvailableColor(durationMS){
+    return durationMS > (24*60*60*1000) ? 'red' : 'white';
+  };
+
   var commonTip = function commonTip(d){
     return '<div style="text-align:center;">Workflow</div>' +
           tipline('ID', d.id) +
@@ -708,7 +712,7 @@ function _createWorkflowBrowser(conf,wfb) {
                   toHHMMSS(d.scheduleDuration/1000) : 'NA') +
           tipline('Class Start to Available Duration',
                   d.classStartToAvailableDuration ?
-                  toHHMMSS(d.classStartToAvailableDuration/1000) : 'NA') +
+                  toHHMMSS(d.classStartToAvailableDuration/1000) : 'NA', startToAvailableColor(d.classStartToAvailableDuration))+
           //extractMediaDurations(d) +
           tipline('Row', (d.row + 1) + ' of ' + rows.length);
 
