@@ -286,8 +286,9 @@ function _createWorkflowBrowser(conf,wfb) {
     var dateReadyForTrim = null;
     $.each(workflow.operations,function(i,operation){
       if (operation.id === 'send-email' && operation.description.includes('holding for edit')){
-        dateReadyForTrim = operation.dateCompleted;
-        return;
+        if ( (!dateReadyForTrim) || (operation.dateCompleted && (dateReadyForTrim.getTime() > operation.dateCompleted.getTime())) ) {          
+          dateReadyForTrim = operation.dateCompleted;
+        }
       }
     });
     return dateReadyForTrim;
@@ -764,7 +765,7 @@ function _createWorkflowBrowser(conf,wfb) {
                   toHHMMSS(d.classStartToAvailableDuration/1000) : 'NA', untilAvailableColor(d.classStartToAvailableDuration))+
           tipline('Lecture Start to Ready for Trim Duration',
                   d.untilReadyForTrimDuration ?
-                  toHHMMSS(d.untilReadyForTrimDuration/1000) : 'NA', untilReadyForTrimColor(d.untilReadyForTrimDuration))+
+                  toHHMMSS(d.untilReadyForTrimDuration/1000) : 'NA', untilReadyForTrimColor(d.untilReadyForTrimDuration))+          
           tipline('Row', (d.row + 1) + ' of ' + rows.length);
 
   };
