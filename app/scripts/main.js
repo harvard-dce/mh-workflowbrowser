@@ -47,6 +47,7 @@ function _createWorkflowBrowser(conf,wfb) {
   wfb.workflowStates = [];
 
   var target = conf.target;
+  var container = d3.select(target);
   var dateFormat = d3.time.format('%Y-%m-%dT%X');
   var workflows, operations, workflow24HourMarks, lateTrimMarks;
   var rows =[[]];
@@ -468,7 +469,7 @@ function _createWorkflowBrowser(conf,wfb) {
   console.log('dateStarted: ' + wfb.dateStarted);
   console.log('dateCompleted: ' + wfb.dateCompleted);
 
-  var container = d3.select(target);
+
   container.selectAll('*').remove();
   var nav = container.append('div').style('vertical-align','top');
   nav.classed('row',true);
@@ -798,7 +799,6 @@ function _createWorkflowBrowser(conf,wfb) {
   var setOperationHeight = function setOperationHeight(){
     maxOperationHeight = 28;
     var navHeight = nav.node().getBoundingClientRect().height;
-    console.log('navHeight: ' + navHeight);
     operationHeight = (height - rulerHeight - navHeight) / rows.length -2;
     if (operationHeight < minOperationHeight ) {
       operationHeight = minOperationHeight;
@@ -983,7 +983,6 @@ function _createWorkflowBrowser(conf,wfb) {
     events.enter()
       .append('rect')
       .attr('class', 'offHours')
-
       .style('fill',  '#f6f6f6')
       .style('stroke', '#f6f6f6')
       .style('opacity',0.6)
@@ -1012,7 +1011,11 @@ function _createWorkflowBrowser(conf,wfb) {
     renderEvents();
   };
 
-  var rawReload = function rawReload(){
+  var rawReload = function rawReload(){    
+    // make sure blast circles and workflows are removed so "z-index" is
+    // correct when they are re-added.
+    container.selectAll('circle').remove();
+    container.selectAll('rect.operation').remove();
     console.log('reloading workflow browser data...');
     setWorkflows(conf.workflows);
     wfb.size(width,height);
