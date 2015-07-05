@@ -862,7 +862,7 @@ function _createWorkflowBrowser(conf,wfb) {
   var renderOperations = function renderOperations(ops){
     wfb.operations=ops;
     // bind data
-    var events = svg.selectAll('rect.operation').data(ops, function(d){return d.job; });
+    var events = svg.selectAll('rect.operation').data(ops);
     // enter
     events.enter()
       .append('rect')
