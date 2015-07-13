@@ -55,6 +55,15 @@ Then clone this repo.
 
      % bower update
 
+     % cd test
+
+     # no idea why the next two directives are necessary
+     # see https://github.com/yeoman/generator-webapp/issues/348
+
+     % bower install
+
+     % cd ..
+
      % grunt 
 
      % grunt serve
