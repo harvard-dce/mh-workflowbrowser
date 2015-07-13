@@ -59,7 +59,7 @@ function _createWorkflowBrowser(conf,wfb) {
 
   var offHours   = [];
   var midnights  = [];
-  var op2wf = {};
+  var workflowById = {};
   
   var twentyFourHoursInMs = 24*60*60*1000;
   var lateTrimHours = 7;
@@ -371,7 +371,6 @@ function _createWorkflowBrowser(conf,wfb) {
         workflow.dateStarted = operation.dateStarted;
       }
     }
-    op2wf[operation.job]=workflow;
   };
 
   var processWorkflow = function processWorkflow(workflow){
@@ -390,6 +389,7 @@ function _createWorkflowBrowser(conf,wfb) {
     if (showWorkflow(workflow)) {
       workflow.duration =
         workflow.dateCompleted.getTime() - workflow.dateStarted.getTime();
+      workflowById[workflow.id]=workflow;
       workflows.push(workflow);
       $.each(workflow.operations,function(operationI,operation){
         if (showOperation(operation)) {
@@ -679,7 +679,7 @@ function _createWorkflowBrowser(conf,wfb) {
       .offset(function(d){
         return d3.mouse(this)[1]<toolTipSpace ? [10,-10] : [-10, 0]; } )
       .html(function(d) {
-        return commonTip(op2wf[d.job]) + '<hr />' + '<div style="text-align:center;">Operation</div>'+
+        return commonTip(workflowById[d.workflowId]) + '<hr />' + '<div style="text-align:center;">Operation</div>'+
           tipline('ID',d.id, operationColor(d.id)) +
           tipline('Description', d.description) +
           tipline('State',d.state,stateColor(d.state,'white'))+
