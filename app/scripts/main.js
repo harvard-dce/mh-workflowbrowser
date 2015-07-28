@@ -6,6 +6,8 @@
 function _createWorkflowBrowser(conf,wfb) {
   'use strict';
 
+
+
   if ( ! wfb ) {
     wfb = {};
   }
@@ -491,6 +493,7 @@ function _createWorkflowBrowser(conf,wfb) {
     $('#'+id).val(selected);
     $('#'+id).change(function(){
       conf.selectedDataSourceName = $('#'+id).val();
+      history.pushState(null,document.title,'?dsn='+conf.selectedDataSourceName);
       //total reload.
       conf.height=height;
       conf.width =width;
@@ -1012,6 +1015,8 @@ function _createWorkflowBrowser(conf,wfb) {
     renderEvents();
   };
 
+
+
   var rawReload = function rawReload(){    
     // make sure blast circles and workflows are removed so "z-index" is
     // correct when they are re-added.
@@ -1037,6 +1042,27 @@ function workflowBrowser(conf,wfb){
   if ( ! wfb ) {
     wfb = {};
   }
+
+  var getUrlParams = function getUrlParams() {
+    var params = [], hash;
+    var querySeparatorLocation = window.location.href.indexOf('?') + 1;
+    var hashes = window.location.href.slice(querySeparatorLocation).split('&');
+    for(var i = 0; i < hashes.length; i++) {
+      hash = hashes[i].split('=');
+      params.push(hash);
+      params[hash[0]] = hash[1];
+    }
+    return params;
+  };
+
+  var urlState = getUrlParams();
+  wfb.urlState = urlState;
+
+  if ( _.has(urlState,'dsn')){
+    console.log('Setting selected dataSourceName to ' + urlState.dsn);
+    conf.selectedDataSourceName = urlState.dsn;
+  }
+
   wfb.dataSource = _.find(conf.dataSources,function(ds){
     return ds.name === conf.selectedDataSourceName; });
 
