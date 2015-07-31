@@ -495,20 +495,27 @@ function _createWorkflowBrowser(conf,wfb) {
     $('#'+id).val(selected);
     $('#'+id).change(function(){
       conf.selectedDataSourceName = $('#'+id).val();
-      pushUrlState();
+      pushUrlState(['dsn']);
       //total reload.
       conf.height=height;
       conf.width =width;
+      wfb.dateStarted=null;
+      wfb.dateCompleted=null;
       workflowBrowser(conf,wfb);
     });
   };
 
-  var pushUrlState = _.throttle(function pushUrlState(){
-    var a = scale.invert(1).getTime();
-    var z = scale.invert(width-1).getTime();
-    console.log('a:' + a + ' = '+ scale.invert(1));
-    console.log('z:' + z + ' = '+scale.invert(width-1));
-    history.pushState(null,document.title,'?dsn='+conf.selectedDataSourceName+'&a='+a+'&z='+z);
+  var pushUrlState = _.throttle(function pushUrlState(statesToPush){
+    var queryString = '?dsn='+conf.selectedDataSourceName;
+    if ( !statesToPush || 'a' in statesToPush  ) {
+      var a = scale.invert(1).getTime();
+      queryString += '&a='+a;
+    }
+    if ( !statesToPush || 'z' in statesToPush ) {
+      var z = scale.invert(width-1).getTime();
+      queryString += '&z='+z;
+    }
+    history.pushState(null,document.title, queryString);
   },3000);
 
   var createSelectionFilter =
@@ -1035,8 +1042,6 @@ function _createWorkflowBrowser(conf,wfb) {
     updateXAxis();
     renderEvents();
   };
-
-
 
 
   var rawReload = function rawReload(){    
