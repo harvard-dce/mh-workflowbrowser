@@ -6,8 +6,6 @@
 function _createWorkflowBrowser(conf,wfb) {
   'use strict';
 
-
-
   if ( ! wfb ) {
     wfb = {};
   }
@@ -32,8 +30,11 @@ function _createWorkflowBrowser(conf,wfb) {
 
   var resized = true;
 
-  wfb.dateStarted = null;
-  wfb.dateCompleted = null;
+  _.defaults(wfb, { 'dateStarted':  null}); 
+  _.defaults(wfb, { 'dateCompleted': null});  
+
+  console.log(wfb.dateStarted);
+  console.log(wfb.dateCompleted);
 
   wfb.dataSources = conf.dataSources;
   wfb.maxMediaDuration =0;
@@ -63,9 +64,10 @@ function _createWorkflowBrowser(conf,wfb) {
   var midnights  = [];
   var workflowById = {};
   
-  var twentyFourHoursInMs = 24*60*60*1000;
+  var oneHourInMs=60*60*1000;
+  var twentyFourHoursInMs = 24*oneHourInMs;
   var lateTrimHours = 7;
-  var lateTrimMs = lateTrimHours*60*60*1000;
+  var lateTrimMs = lateTrimHours*oneHourInMs;
 
   // rationalize data workflow data structure if getting straight from MH.
   if (conf.workflows.hasOwnProperty('workflows') ) {
@@ -386,7 +388,7 @@ function _createWorkflowBrowser(conf,wfb) {
         });
     if ( workflow.dateCompleted === null || workflow.dateStarted === null ) {
       delete workflow.dateCompleted;
-      delete workflow.dataStarted;
+      delete workflow.dateStarted;
     }
     if (showWorkflow(workflow)) {
       workflow.duration =
@@ -493,13 +495,21 @@ function _createWorkflowBrowser(conf,wfb) {
     $('#'+id).val(selected);
     $('#'+id).change(function(){
       conf.selectedDataSourceName = $('#'+id).val();
-      history.pushState(null,document.title,'?dsn='+conf.selectedDataSourceName);
+      pushUrlState();
       //total reload.
       conf.height=height;
       conf.width =width;
       workflowBrowser(conf,wfb);
     });
   };
+
+  var pushUrlState = _.throttle(function pushUrlState(){
+    var a = scale.invert(1).getTime();
+    var z = scale.invert(width-1).getTime();
+    console.log('a:' + a + ' = '+ scale.invert(1));
+    console.log('z:' + z + ' = '+scale.invert(width-1));
+    history.pushState(null,document.title,'?dsn='+conf.selectedDataSourceName+'&a='+a+'&z='+z);
+  },3000);
 
   var createSelectionFilter =
       function createSelectionFilter(label,id,options,filterType){
@@ -602,6 +612,16 @@ function _createWorkflowBrowser(conf,wfb) {
       .attr('width', width)
       .attr('height', height);
 
+  if (_.has(wfb.urlState,'a')){
+      wfb.dateStarted = new Date(parseInt(wfb.urlState.a));
+      console.log('urlState a:' + wfb.dateStarted);
+  }
+  
+  if (_.has(wfb.urlState,'z')){
+    wfb.dateCompleted = new Date(parseInt(wfb.urlState.z));
+    console.log('urlState z:' + wfb.dateCompleted);
+  }
+
   var scale = d3.time.scale()
       .domain([wfb.dateStarted, wfb.dateCompleted]).range([10,width]);
 
@@ -617,6 +637,7 @@ function _createWorkflowBrowser(conf,wfb) {
   var zoom = d3.behavior.zoom()
       .on('zoom', function(){
         wfb.refresh();
+        pushUrlState();
       }).x(scale);
 
   // pane to catch zoom events.
@@ -1017,6 +1038,7 @@ function _createWorkflowBrowser(conf,wfb) {
 
 
 
+
   var rawReload = function rawReload(){    
     // make sure blast circles and workflows are removed so "z-index" is
     // correct when they are re-added.
@@ -1043,7 +1065,7 @@ function workflowBrowser(conf,wfb){
     wfb = {};
   }
 
-  var getUrlParams = function getUrlParams() {
+  var getUrlState = function getUrlState() {
     var params = [], hash;
     var querySeparatorLocation = window.location.href.indexOf('?') + 1;
     var hashes = window.location.href.slice(querySeparatorLocation).split('&');
@@ -1055,7 +1077,7 @@ function workflowBrowser(conf,wfb){
     return params;
   };
 
-  var urlState = getUrlParams();
+  var urlState = getUrlState();
   wfb.urlState = urlState;
 
   if ( _.has(urlState,'dsn')){
