@@ -33,9 +33,6 @@ function _createWorkflowBrowser(conf,wfb) {
   _.defaults(wfb, { 'dateStarted':  null}); 
   _.defaults(wfb, { 'dateCompleted': null});  
 
-  console.log(wfb.dateStarted);
-  console.log(wfb.dateCompleted);
-
   wfb.dataSources = conf.dataSources;
   wfb.maxMediaDuration =0;
   wfb.scaleByMediaDuration = true;
@@ -271,7 +268,7 @@ function _createWorkflowBrowser(conf,wfb) {
     }
     if (w.hasOwnProperty('scheduleStart') &&
         w.hasOwnProperty('scheduleStop') ) {
-      w.scheduleDuration = w.scheduleStop.getTime() - w.scheduleStart.getTime();
+      w.scheduledDuration = w.scheduleStop.getTime() - w.scheduleStart.getTime();
     }
   };
 
@@ -402,9 +399,8 @@ function _createWorkflowBrowser(conf,wfb) {
           operation.workflowId = workflow.id;
           operation.workflowState = workflow.state;
           operation.workflowMediaDuration =
-            parseInt(workflow.mediapackage.duration);
-          operation.duration =
-            operation.dateCompleted.getTime() - operation.dateStarted.getTime();
+            parseInt(workflow.mediapackage.duration) || workflow.scheduledDuration || 1; // is this kosher?
+          operation.duration =  operation.dateCompleted.getTime() - operation.dateStarted.getTime();
           operation.performanceRatio =
             (operation.duration+0.0) / (operation.workflowMediaDuration+0.0);
           if (operation.workflowMediaDuration > wfb.maxMediaDuration) {
@@ -789,8 +785,8 @@ function _createWorkflowBrowser(conf,wfb) {
           tipline('Producer',d.mediapackage.contributors.contributor) +
           tipline('Lecturer',d.mediapackage.creators.creator) +
           tipline('Workflow Duration',  toHHMMSS(d.duration/1000)) +
-          tipline('Scheduled Duration', d.scheduleDuration ?
-                  toHHMMSS(d.scheduleDuration/1000) : 'NA') +
+          tipline('Scheduled Duration', d.scheduledDuration ?
+                  toHHMMSS(d.scheduledDuration/1000) : 'NA') +
           tipline('Lecture Start to Available Duration',
                   d.classStartToAvailableDuration ?
                   toHHMMSS(d.classStartToAvailableDuration/1000) : 'NA', untilAvailableColor(d.classStartToAvailableDuration))+
@@ -852,23 +848,35 @@ function _createWorkflowBrowser(conf,wfb) {
   };
 
   var renderEvents = function renderEvents(){
-    setOperationHeight();
-    renderOffHours(offHours);
-    renderMidnights(midnights);
-    renderWorkflows(workflows);
-    renderOperations(operations);
-    render24HourMarks(workflow24HourMarks);
-    renderLateTrimMarks(lateTrimMarks);
+    if (wfb.dateStarted && wfb.dateCompleted){
+      setOperationHeight();
+      renderOffHours(offHours);
+      renderMidnights(midnights);
+      renderWorkflows(workflows);
+      renderOperations(operations);
+      render24HourMarks(workflow24HourMarks);
+      renderLateTrimMarks(lateTrimMarks);
+    } else {
+      console.log('Not rendering events because no scaling dates.');
+    }
   };
 
   var scaledOperationHeight = function scaledOperationHeight(o){
+
+
+
     var boost = wfb.operationConf.hasOwnProperty(o.id) ? wfb.operationConf[o.id].boost : 0;
     boost = boost ? boost : 0;
     boost*=4;
     if ( wfb.scaleByMediaDuration ) {
-      return Math.max(4,operationHeight *
+      var h = Math.max(4,operationHeight *
                       (parseInt(o.workflowMediaDuration)/
                        parseInt(wfb.maxMediaDuration)))+boost;
+      if (!h){
+        console.log('Aha!',operationHeight,o.workflowMediaDuration,wfb.maxMediaDuration);
+
+      }
+      return h;
     } else {
       return operationHeight+boost;
     }
@@ -908,6 +916,7 @@ function _createWorkflowBrowser(conf,wfb) {
     ;
     // update y
     if ( resized ) {
+
       events
         .attr('y', function(o){ return scaledOperationY(o);})
         .attr('height', function(o){return scaledOperationHeight(o);})
