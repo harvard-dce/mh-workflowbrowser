@@ -36,7 +36,7 @@ module.exports = function (grunt) {
       },
       js: {
         files: ['<%= config.app %>/scripts/{,*/}*.js'],
-        tasks: ['jshint'],
+        tasks: ['jshint','browserify:dev'],
         options: {
           livereload: true
         }
@@ -168,6 +168,20 @@ module.exports = function (grunt) {
       }
     },
 
+    // Use Browserify to stich together CJS modules into single app file.
+    browserify: {
+      dev: {
+        files: {
+          '.tmp/scripts/bundle.js': '<%= config.app %>/scripts/main.js'
+        }
+      },
+      prod: {
+        files: {
+          '.tmp/scripts/bundle.js' : '<%= config.app %>/scripts/main.js'
+        }
+      }
+    },
+    
     // Renames files for browser caching purposes
     rev: {
       dist: {
@@ -332,6 +346,7 @@ module.exports = function (grunt) {
 
     grunt.task.run([
       'clean:server',
+      'browserify:dev',
       'wiredep',
       'concurrent:server',
       'autoprefixer',
@@ -340,6 +355,9 @@ module.exports = function (grunt) {
     ]);
   });
 
+
+  grunt.loadNpmTasks('grunt-browserify');
+                   
   grunt.registerTask('server', function (target) {
     grunt.log.warn('The `server` task has been deprecated. Use `grunt serve` to start a server.');
     grunt.task.run([target ? ('serve:' + target) : 'serve']);
@@ -363,6 +381,7 @@ module.exports = function (grunt) {
   grunt.registerTask('build', [
     'clean:dist',
     'wiredep',
+    'browserify:prod',
     'useminPrepare',
     'concurrent:dist',
     'autoprefixer',
@@ -380,4 +399,8 @@ module.exports = function (grunt) {
     'test',
     'build'
   ]);
+
+
+                   
 };
+

@@ -863,8 +863,6 @@ function _createWorkflowBrowser(conf,wfb) {
 
   var scaledOperationHeight = function scaledOperationHeight(o){
 
-
-
     var boost = wfb.operationConf.hasOwnProperty(o.id) ? wfb.operationConf[o.id].boost : 0;
     boost = boost ? boost : 0;
     boost*=4;
@@ -1118,3 +1116,6 @@ function workflowBrowser(conf,wfb){
   });
   return wfb;
 }
+
+module.exports = workflowBrowser;
+global.workflowBrowser = workflowBrowser;
