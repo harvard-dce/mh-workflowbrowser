@@ -37,7 +37,6 @@ function _createWorkflowBrowser(conf,wfb) {
     }
   });
 
-  
 
   var resized = true;
 
@@ -288,7 +287,7 @@ function _createWorkflowBrowser(conf,wfb) {
     workflows=_.filter(workflows,durationPredicate);
     stackWorkflows(workflows);
     if ( true ) {
-      times.setWorkflow24HourMarks(workflows,lateTrimMarks);
+      times.setWorkflow24HourMarks(workflows,workflow24HourMarks);
       times.setLateTrimMarks(workflows,lateTrimMarks);
     }
     // now weed out operations that haven't passed duration filter. messy.
