@@ -9,6 +9,7 @@ function _createWorkflowBrowser(conf,wfb) {
   var tooltips = require('./tooltips');
   var times    = require('./times');
   var colors   = require('./colors');
+  var stacker  = require('./stacker');
 
   wfb.operationConf = conf.operationConf || {'apply-acl':{'color':'#6baed6'},'tag':{'color':'#9ecae1'},'inspect':{'color':'#c6dbef'},'prepare-av':{'color':'#e6550d'},'compose':{'color':'#3182bd'},'waveform':{'color':'#fd8d3c'},'append':{'color':'#fdae6b'},'cleanup':{'color':'#fdd0a2'},'send-email':{'color':'#31a354','boost':1 },'editor':{'color':'#74c476'},'image':{'color':'#a1d99b'},'segment-video':{'color':'#c7e9c0'},'segmentpreviews':{'color':'#756bb1'},'retract-engage':{'color':'#9e9ac8'},'publish-engage':{'color':'#bcbddc'},'test-local':{'color':'#dadaeb'},'zip':{'color':'#636363'},'execute-once':{'color':'#969696'},'archive':{'color':'#bdbdbd'},'error-resolution':{'color':'#d9d9d9'},'schedule':{'color':'#3182bd', 'visible':false},'capture':{'color':'#6baed6'},'ingest':{'color':'#9ecae1'}};
 
@@ -24,7 +25,7 @@ function _createWorkflowBrowser(conf,wfb) {
 
   var width  = conf.width;
   var height = conf.height;
-  var workflowTip,operationTip,lateAvailableTip, lateTrimTip;
+  var workflowTip,operationTip,jobTip,lateAvailableTip, lateTrimTip;
 
   wfb.visibleOperationIds = []; 
  
@@ -36,7 +37,6 @@ function _createWorkflowBrowser(conf,wfb) {
       wfb.visibleOperationIds.push(id);
     }
   });
-
 
   var resized = true;
 
@@ -59,14 +59,14 @@ function _createWorkflowBrowser(conf,wfb) {
   var target = conf.target;
   var container = d3.select(target);
   var dateFormat = d3.time.format('%Y-%m-%dT%X');
-  var workflows, operations, workflow24HourMarks, lateTrimMarks;
-  var rows =[[]];
+  var workflows, operations, jobs, workflow24HourMarks, lateTrimMarks;
+  jobs = [];
+  var workflowStacker, jobStacker;
 
   var maxOperationHeight = 0;
   var minOperationHeight = 3;
   var rulerHeight = 20;
   var operationHeight = 0;
-
 
   var workflowById = {};
   
@@ -85,40 +85,6 @@ function _createWorkflowBrowser(conf,wfb) {
       }
     });
   }
-
-  var getRow = function getRow(event){
-    var eventFits = true;
-    var eventRow  = -1;
-    if ( ! (event.dateStarted && event.dateCompleted )) {
-      // can't stack these guys.
-      return -1;
-    }
-    $.each(rows,function(rowI,rowEvents){
-      if (eventRow > -1){
-        return false;
-      }
-      eventFits = true;
-      $.each(rowEvents,function(eventI,e){
-        if ( e.dateStarted <= event.dateCompleted &&
-             e.dateCompleted >=  event.dateStarted ) {
-          eventFits = false;
-          return false;
-        }
-      });
-      if ( eventFits ) {
-        rowEvents.push(event);
-        eventRow = rowI;
-        return false;
-      }
-    });
-    if (eventFits ) {
-      return eventRow;
-    } else {
-      rows.push([]);
-      rows[rows.length-1].push(event);
-      return rows.length-1;
-    }
-  };
 
   var showOperation = function showOperation(operation){
     // should we show this operation?
@@ -196,12 +162,10 @@ function _createWorkflowBrowser(conf,wfb) {
     return true;
   };
 
- 
-
   var stackWorkflows = function stackWorkflows(workflows){
     workflows = _.sortBy(workflows, 'dateStarted');
     $.each(workflows,function(i,workflow){
-      var row = getRow(workflow);
+      var row = workflowStacker.stack(workflow);
       workflow.row = row;
       $.each(workflow.operations,function(operationI,operation){
         operation.row = row;
@@ -275,9 +239,10 @@ function _createWorkflowBrowser(conf,wfb) {
 
   var setWorkflows = function setWorkflows(wfs){
     // blow out any existing workflows and set to given.
-    rows = [[]];
+    workflowStacker = stacker.create();
     workflows = [];
     operations = [];
+    jobs =[];
     workflow24HourMarks = [];
     lateTrimMarks =[];
     $.each(wfs,function(i,workflow){
@@ -323,8 +288,6 @@ function _createWorkflowBrowser(conf,wfb) {
   };
 
   setWorkflows(conf.workflows);
-  console.log('calloo, callay!');
-  console.log(wfb,offHours,midnights);
   times.calculateOffHoursAndMidnights(wfb,offHours,midnights);
 
   console.log('dateStarted: ' + dateStarted);
@@ -482,9 +445,8 @@ function initWorkflowTip(){
       .offset(function(){
         return d3.mouse(this)[1]<tooltips.toolTipSpace ? [10,-10] : [-10, 0];})
       .html(function(d) {
-        return tooltips.commonTipText(d,rows.length)
-        ;
-      });
+        return tooltips.commonTipText(d,workflowStacker.rowCount());}
+     );
   svg.call(workflowTip);
   workflowTip.direction(function() {
     workflowTip.attr('class', 'd3-tip');
@@ -496,13 +458,23 @@ function initWorkflowTip(){
 }
 
 function initOperationTip(){
-  console.log('initOperationTip:');
   operationTip = d3.tip()
       .attr('class', 'd3-tip')
       .offset(function(){
         return d3.mouse(this)[1]<tooltips.toolTipSpace ? [10,-10] : [-10, 0]; } )
       .html(function(d) {
-        return tooltips.commonTipText(workflowById[d.workflowId],rows.length) + '<hr />' + tooltips.operationTipText(d)
+        // Extract the jobs to show. horrible place to put this.
+        if ( _.has(d,'job') && _.has(d.job,'children')){
+          jobs = d.job.children;
+          jobs.map(function(job){times.parseJobDates(job);});
+          jobs.map(function(job){job.operation=d;});
+          jobStacker = stacker.create();
+          jobs.map(function(job){jobStacker.stack(job);});
+          renderJobs(jobs);
+        } else {
+          //console.log('this job has no children.');
+        }
+        return tooltips.commonTipText(workflowById[d.workflowId],workflowStacker.rowCount()) + '<hr />' + tooltips.operationTipText(d)
         ;
       });  
   svg.call(operationTip);
@@ -513,6 +485,15 @@ function initOperationTip(){
     }
     return 'n';
   });
+}
+
+function initJobTip(){
+  jobTip = d3.tip()
+      .attr('class', 'd3-tip')
+      .offset([-10,0])
+      .html(function(d){return tooltips.jobTipText(d);})
+  ;
+  svg.call(jobTip);
 }
 
 function initLateAvailableTip () {
@@ -533,9 +514,12 @@ function initLateTrimTip(){
   svg.call(lateTrimTip);
 }
 
+
+
 function initTooltips(){
   initWorkflowTip();
   initOperationTip();
+  initJobTip();
   initLateTrimTip();
   initLateAvailableTip();  
 }
@@ -608,12 +592,10 @@ initTooltips();
     renderEvents();
   };
 
-
-
   var setOperationHeight = function setOperationHeight(){
     maxOperationHeight = 28;
     var navHeight = nav.node().getBoundingClientRect().height;
-    operationHeight = (height - rulerHeight - navHeight) / rows.length -2;
+    operationHeight = (height - rulerHeight - navHeight) / workflowStacker.rowCount() -2;
     if (operationHeight < minOperationHeight ) {
       operationHeight = minOperationHeight;
     } else if (operationHeight > maxOperationHeight ) {
@@ -633,8 +615,6 @@ initTooltips();
         o.dateCompleted) - scale(o.dateStarted)]);});
   };
 
-//tooltips.init({'d3':d3,'svg':svg,'colors':colors,'times':times,'rows':rows,'wfb':wfb});
-
   var renderEvents = function renderEvents(){
     if (wfb.dateStarted && wfb.dateCompleted){
       setOperationHeight();
@@ -642,6 +622,7 @@ initTooltips();
       renderMidnights(midnights);
       renderWorkflows(workflows);
       renderOperations(operations);
+      renderJobs(jobs);
       render24HourMarks(workflow24HourMarks);
       renderLateTrimMarks(lateTrimMarks);
     } else {
@@ -701,7 +682,6 @@ initTooltips();
     ;
     // update y
     if ( resized ) {
-
       events
         .attr('y', function(o){ return scaledOperationY(o);})
         .attr('height', function(o){return scaledOperationHeight(o);})
@@ -713,6 +693,37 @@ initTooltips();
     ;
     // exit
     events.exit().remove();
+  };
+
+  var renderJobs = function renderJobs(jobs){
+    var events = svg.selectAll('rect.job').data(jobs);
+     // enter
+    events.enter()
+      .append('rect')
+      .attr('class', 'job')
+       .attr('rx', 1)
+      .attr('ry', 1)
+      .style('stroke',  'yellow')
+      .style('opacity',0.6)
+      .on('mouseover', jobTip.show)
+      .on('mouseout',  jobTip.hide)      
+      .style('fill', 'yellow' )
+    ;
+    // update y
+    if ( true ) {
+      events
+        .attr('y', function(d){ return workflowY(d.operation)-1;})
+        .attr('height', 3);
+        //.attr('height', function(d){return scaledOperationHeight(d.operation);})
+      
+    }
+    // update x
+    events
+      .call(sizeEvents)
+    ;
+    // exit
+    events.exit().remove();
+
   };
 
   var render24HourMarks = function render24HourMarks(marks){

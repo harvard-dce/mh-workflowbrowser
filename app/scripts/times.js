@@ -41,14 +41,8 @@ function updateTimeSpan(parentSpan,object) {
     }
   }
 
-function parseOperationDates(wfb,object) {
-    if (object.hasOwnProperty('started')){
-      object.dateStarted = new Date(object.started);
-    }
-    if (object.hasOwnProperty('completed')) {
-      object.dateCompleted = new Date(object.completed);
-    }
-    // use one timestamp for both ends if that's all we have.
+
+function useOneTimestampForBothEndsIfThatsAllWeHave(object){
     if (! (object.hasOwnProperty('dateStarted') &&
            object.hasOwnProperty('dateCompleted'))  ) {
       if (object.hasOwnProperty('dateCompleted') ){
@@ -58,9 +52,32 @@ function parseOperationDates(wfb,object) {
         object.dateCompleted = object.dateStarted;
       }
     }
+}
+
+function parseOperationDates(wfb,object) {
+    if (object.hasOwnProperty('started')){
+      object.dateStarted = new Date(object.started);
+    }
+    if (object.hasOwnProperty('completed')) {
+      object.dateCompleted = new Date(object.completed);
+    }
+    useOneTimestampForBothEndsIfThatsAllWeHave(object);
     // danger, side effect...
     updateTimeSpan(wfb,object);
   }
+
+function parseJobDates(job){
+  if (_.has(job,'dateStarted')){
+    job.dateStarted = new Date(job.dateStarted);
+    //console.log('DateStarted:' , job.dateStarted);
+  }
+  if (_.has(job,'dateCompleted')){
+    job.dateCompleted = new Date(job.dateCompleted);
+    //console.log('DateCompleted:' , job.dateCompleted);
+  }
+  useOneTimestampForBothEndsIfThatsAllWeHave(job);
+  //console.log('we have a job: ', job);
+}
 
 function calculateOffHoursAndMidnights(wfb,offHours,midnights){
 	var oh ={};
@@ -174,6 +191,7 @@ module.exports= {
 	'makeMidnight':makeMidnight,
 	'oneHourInMs':oneHourInMs,
 	'parseOperationDates':parseOperationDates,
+  'parseJobDates': parseJobDates,
 	'toHHMMSS':toHHMMSS,
 	'twentyFourHoursInMs':twentyFourHoursInMs,
 	'setLateTrimMarks':setLateTrimMarks,

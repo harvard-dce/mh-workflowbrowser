@@ -37,6 +37,11 @@ function commonTipText(d,rowLength){
 }
 
 function operationTipText(d){
+  var jobCount=0;
+  if (_.has(d,'job') && d.job.children){
+    jobCount = d.job.children.length;
+  }
+  jobCount = jobCount ? jobCount : 0;
   return '<div style="text-align:center;">Operation</div>'+
           tipline('ID',d.id, colors.operationColor(d.id)) +
           tipline('Description', d.description) +
@@ -45,8 +50,29 @@ function operationTipText(d){
           tipline('Completed', d.dateCompleted) +
           tipline('Duration', times.toHHMMSS(d.duration/1000)) +
           tipline('Performance Ratio', d.performanceRatio.toFixed(2)) +
-           tipline('Number', d.count + ' of ' + d.workflowOperationsCount); 
+           tipline('Number', d.count + ' of ' + d.workflowOperationsCount) +
+           tipline('Child Jobs',''+jobCount); 
 }
+
+
+function jobTipText(d){
+  var jobCount=0;
+  jobCount = d.operation.job.children.length;
+  var jobNumber=0;
+  console.log('job:', d);
+  return '<div style="text-align:center;color:yellow;">Job</div>'+
+          tipline('ID',d.id) +
+          tipline('Job Operation', d.description) +
+          tipline('Type', d.type) +
+          tipline('Status',d.status)+
+          tipline('Started', d.dateStarted)+
+          tipline('Completed', d.dateCompleted) +          
+          tipline('Duration', times.toHHMMSS(d.duration/1000))  +
+          tipline('Queue Time', times.toHHMMSS(d.queueTime/1000)) +
+          tipline('Run Time', times.toHHMMSS(d.runTime/1000)) +
+          tipline('Number', jobNumber +' of '+jobCount); 
+}
+
 
 function init(args){
   colors = args.colors;
@@ -55,6 +81,7 @@ function init(args){
 
 module.exports = {
   'init' : init,
+  'jobTipText' : jobTipText,
   'commonTipText' : commonTipText,
   'operationTipText' :operationTipText,
   'tipline' : tipline,
