@@ -3,8 +3,10 @@
 /*global workflowBrowser */
 /*jshint unused:false */
 
+'use strict';
+
 function _createWorkflowBrowser(conf,wfb) {
-  'use strict';
+
 
   var tooltips = require('./tooltips');
   var times    = require('./times');
@@ -174,7 +176,7 @@ function _createWorkflowBrowser(conf,wfb) {
   };
 
   var processOperation = function processOperation(workflow,operation){
-    times.parseOperationDates(wfb,operation);
+    times.setOperationDates(wfb,operation);
     if ( operation.id === 'schedule' ) {
       times.attachScheduledDuration(workflow,operation);
     }
@@ -457,23 +459,32 @@ function initWorkflowTip(){
     });
 }
 
+function setJobsToRender(operation){
+  if ( _.has(operation,'job') && _.has(operation.job,'children')){         
+    jobs = operation.job.children;
+    jobStacker = stacker.create();
+    $.each(jobs,function(i,job){
+      job.count=i+1;
+      // confusing: operations cointain jobs,
+      // but there is also a distinct property of job called 'operation'
+      if (! _.has(job,'jobOperation')){
+        job.jobOperation = job.operation;
+      }
+      job.operation=operation;
+      times.setJobDates(job);
+      jobStacker.stack(job);
+    });
+    renderJobs(jobs);
+  }
+}
+
 function initOperationTip(){
   operationTip = d3.tip()
       .attr('class', 'd3-tip')
       .offset(function(){
         return d3.mouse(this)[1]<tooltips.toolTipSpace ? [10,-10] : [-10, 0]; } )
       .html(function(d) {
-        // Extract the jobs to show. horrible place to put this.
-        if ( _.has(d,'job') && _.has(d.job,'children')){
-          jobs = d.job.children;
-          jobs.map(function(job){times.parseJobDates(job);});
-          jobs.map(function(job){job.operation=d;});
-          jobStacker = stacker.create();
-          jobs.map(function(job){jobStacker.stack(job);});
-          renderJobs(jobs);
-        } else {
-          //console.log('this job has no children.');
-        }
+        setJobsToRender(d);    
         return tooltips.commonTipText(workflowById[d.workflowId],workflowStacker.rowCount()) + '<hr />' + tooltips.operationTipText(d)
         ;
       });  
@@ -723,7 +734,6 @@ initTooltips();
     ;
     // exit
     events.exit().remove();
-
   };
 
   var render24HourMarks = function render24HourMarks(marks){
@@ -867,7 +877,6 @@ initTooltips();
 
 
 function workflowBrowser(conf,wfb){
-  'use strict';
   if ( ! wfb ) {
     wfb = {};
   }

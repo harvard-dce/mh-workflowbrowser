@@ -54,7 +54,7 @@ function useOneTimestampForBothEndsIfThatsAllWeHave(object){
     }
 }
 
-function parseOperationDates(wfb,object) {
+function setOperationDates(wfb,object) {
     if (object.hasOwnProperty('started')){
       object.dateStarted = new Date(object.started);
     }
@@ -66,17 +66,15 @@ function parseOperationDates(wfb,object) {
     updateTimeSpan(wfb,object);
   }
 
-function parseJobDates(job){
+function setJobDates(job){
   if (_.has(job,'dateStarted')){
     job.dateStarted = new Date(job.dateStarted);
-    //console.log('DateStarted:' , job.dateStarted);
   }
   if (_.has(job,'dateCompleted')){
     job.dateCompleted = new Date(job.dateCompleted);
-    //console.log('DateCompleted:' , job.dateCompleted);
   }
   useOneTimestampForBothEndsIfThatsAllWeHave(job);
-  //console.log('we have a job: ', job);
+  job.duration = job.dateCompleted.getTime() - job.dateStarted.getTime();
 }
 
 function calculateOffHoursAndMidnights(wfb,offHours,midnights){
@@ -190,8 +188,8 @@ module.exports= {
 	'lateTrimMs':lateTrimMs,
 	'makeMidnight':makeMidnight,
 	'oneHourInMs':oneHourInMs,
-	'parseOperationDates':parseOperationDates,
-  'parseJobDates': parseJobDates,
+	'setOperationDates':setOperationDates,
+  'setJobDates': setJobDates,
 	'toHHMMSS':toHHMMSS,
 	'twentyFourHoursInMs':twentyFourHoursInMs,
 	'setLateTrimMarks':setLateTrimMarks,

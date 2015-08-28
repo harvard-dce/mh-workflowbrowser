@@ -58,11 +58,13 @@ function operationTipText(d){
 function jobTipText(d){
   var jobCount=0;
   jobCount = d.operation.job.children.length;
-  var jobNumber=0;
-  console.log('job:', d);
+  var childJobsCount = 0;
+    if (_.has(d,'children')){
+    childJobsCount = d.children.length;
+  }
   return '<div style="text-align:center;color:yellow;">Job</div>'+
           tipline('ID',d.id) +
-          tipline('Job Operation', d.description) +
+          tipline('Job Operation', d.jobOperation) +
           tipline('Type', d.type) +
           tipline('Status',d.status)+
           tipline('Started', d.dateStarted)+
@@ -70,7 +72,8 @@ function jobTipText(d){
           tipline('Duration', times.toHHMMSS(d.duration/1000))  +
           tipline('Queue Time', times.toHHMMSS(d.queueTime/1000)) +
           tipline('Run Time', times.toHHMMSS(d.runTime/1000)) +
-          tipline('Number', jobNumber +' of '+jobCount); 
+          tipline('Number', d.count +' of '+jobCount) +
+          tipline('Child Jobs',''+ childJobsCount); 
 }
 
 
