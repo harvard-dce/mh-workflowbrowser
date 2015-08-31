@@ -7,8 +7,10 @@
 
 function _createWorkflowBrowser(conf,wfb) {
 
-
-  var tooltips = require('./tooltips');
+  //wfb.conf=conf;
+  //if (true){return;}
+  
+  var tooltips = require('./tooltips');       
   var times    = require('./times');
   var colors   = require('./colors');
   var stacker  = require('./stacker');
@@ -224,7 +226,13 @@ function _createWorkflowBrowser(conf,wfb) {
           operation.workflowState = workflow.state;
           operation.workflowMediaDuration =
             parseInt(workflow.mediapackage.duration) || workflow.scheduledDuration || 1; // is this kosher?
-          operation.duration =  operation.dateCompleted.getTime() - operation.dateStarted.getTime();
+          try {
+            operation.duration =  operation.dateCompleted.getTime() - operation.dateStarted.getTime();
+          } catch (e){
+            console.log(operation.dateCompleted);
+            console.log(operation.dateStarted);
+            console.log(operation);
+          }
           operation.performanceRatio =
             (operation.duration+0.0) / (operation.workflowMediaDuration+0.0);
           if (operation.workflowMediaDuration > wfb.maxMediaDuration) {
@@ -460,10 +468,11 @@ function initWorkflowTip(){
 }
 
 function setJobsToRender(operation){
-  if ( _.has(operation,'job') && _.has(operation.job,'children')){         
-    jobs = operation.job.children;
+  if ( _.has(operation,'job') && _.has(operation.job,'children')){   
+    // mongo is doing funny things to my arrays...
+    jobs=[];
     jobStacker = stacker.create();
-    $.each(jobs,function(i,job){
+    $.each(operation.job.children,function(i,job){
       job.count=i+1;
       // confusing: operations cointain jobs,
       // but there is also a distinct property of job called 'operation'
@@ -473,8 +482,11 @@ function setJobsToRender(operation){
       job.operation=operation;
       times.setJobDates(job);
       jobStacker.stack(job);
+      jobs.push(job);
     });
     renderJobs(jobs);
+  } else {
+    //console.log('no jobs to render for this bad boy: ', operation);
   }
 }
 
@@ -524,8 +536,6 @@ function initLateTrimTip(){
   ;
   svg.call(lateTrimTip);
 }
-
-
 
 function initTooltips(){
   initWorkflowTip();
@@ -708,7 +718,7 @@ initTooltips();
 
   var renderJobs = function renderJobs(jobs){
     var events = svg.selectAll('rect.job').data(jobs);
-     // enter
+    //console.log('reindering jobs: ' + jobs.length); // enter
     events.enter()
       .append('rect')
       .attr('class', 'job')
@@ -915,7 +925,15 @@ function workflowBrowser(conf,wfb){
     } else {
       console.log('got data from: ' + dataUrl);
     }
-    conf.workflows = data;
+    if (_.has(data,'workflows')){
+          console.log('workflow data looks good!');
+          conf.workflows = data;
+        } else {
+          console.log('attempting to fix workflows...'+ data.length);
+          conf.workflows= {'workflows': { 'workflow': data }} ;
+          //console.log('AHA!');
+          //console.log(conf.workflows.workflows.workflow.length);
+      }
     _createWorkflowBrowser(conf,wfb);
   });
   return wfb;

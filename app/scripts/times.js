@@ -7,7 +7,6 @@ var twentyFourHoursInMs = 24*oneHourInMs;
 var lateTrimHours = 7;
 var lateTrimMs = lateTrimHours*oneHourInMs;
 
-
 function toHHMMSS(secNum) {
   var hours   = Math.floor(secNum / 3600);
   var minutes = Math.floor((secNum - (hours * 3600)) / 60);
@@ -40,7 +39,6 @@ function updateTimeSpan(parentSpan,object) {
       }
     }
   }
-
 
 function useOneTimestampForBothEndsIfThatsAllWeHave(object){
     if (! (object.hasOwnProperty('dateStarted') &&
@@ -95,63 +93,70 @@ function calculateOffHoursAndMidnights(wfb,offHours,midnights){
 	midnights.push(makeMidnight(new Date(oh.dateCompleted.getTime())));
 }
 
+function readConfigVal(hash){
+  // Matterhorn emits keys with $. Mongo doesn't like $.
+  // So we replace with underscore.
+  return hash.$ || hash._;
+}
 
- function attachScheduledDuration(w){
-    if (w.hasOwnProperty('configurations') &&
-        w.configurations.hasOwnProperty('configuration')) {
-      $.each(w.configurations.configuration, function(i,c) {
-        if ( c.key === 'schedule.start' ) {
-          w.scheduleStart = new Date(c.$/1);
-        } else if ( c.key === 'schedule.stop' ) {
-          w.scheduleStop  = new Date(c.$/1);
-        } else if ( c.key === 'event.location' ) {
-          w.eventLocation = c.$;
-        }
-      });
+
+function attachScheduledDuration(w){
+  if (w.hasOwnProperty('configurations') &&
+      w.configurations.hasOwnProperty('configuration')) {
+    $.each(w.configurations.configuration, function(i,c) {
+      var value = readConfigVal(c);
+      if ( c.key === 'schedule.start' ) {
+        w.scheduleStart = new Date(value/1);
+      } else if ( c.key === 'schedule.stop' ) {
+        w.scheduleStop  = new Date(value/1);
+      } else if ( c.key === 'event.location' ) {
+        w.eventLocation = value;
+      }
+    });
+  }
+  if (w.hasOwnProperty('scheduleStart') &&
+      w.hasOwnProperty('scheduleStop') ) {
+    w.scheduledDuration = w.scheduleStop.getTime() - w.scheduleStart.getTime();
+  }
+}
+
+function getDateAvailable(workflow){
+  var dateAvailable = null;
+  $.each(workflow.operations,function(i,operation){
+    if (operation.id === 'publish-engage' && operation.description.includes('external')) {
+      dateAvailable = operation.dateCompleted;
+      return;
     }
-    if (w.hasOwnProperty('scheduleStart') &&
-        w.hasOwnProperty('scheduleStop') ) {
-      w.scheduledDuration = w.scheduleStop.getTime() - w.scheduleStart.getTime();
+  });
+  return dateAvailable;
+}
+
+function getDateReadyForTrim(workflow){
+  var dateReadyForTrim = null;
+  $.each(workflow.operations,function(i,operation){
+    if (operation.id === 'send-email' && operation.description.includes('holding for edit')){
+      if ( (!dateReadyForTrim) || (operation.dateCompleted && (dateReadyForTrim.getTime() > operation.dateCompleted.getTime())) ) {          
+        dateReadyForTrim = operation.dateCompleted;
+      }
     }
-  }
+  });
+  return dateReadyForTrim;
+}
 
-  function getDateAvailable(workflow){
-    var dateAvailable = null;
-    $.each(workflow.operations,function(i,operation){
-      if (operation.id === 'publish-engage' && operation.description.includes('external')) {
-        dateAvailable = operation.dateCompleted;
-        return;
-      }
-    });
-    return dateAvailable;
-  }
-
-  function getDateReadyForTrim(workflow){
-    var dateReadyForTrim = null;
-    $.each(workflow.operations,function(i,operation){
-      if (operation.id === 'send-email' && operation.description.includes('holding for edit')){
-        if ( (!dateReadyForTrim) || (operation.dateCompleted && (dateReadyForTrim.getTime() > operation.dateCompleted.getTime())) ) {          
-          dateReadyForTrim = operation.dateCompleted;
-        }
-      }
-    });
-    return dateReadyForTrim;
-  }
-
-  function setWorkflowDateAvailables(workflows){
-    $.each(workflows,function(i,workflow){
-      workflow.dateAvailable = getDateAvailable(workflow);
-      workflow.dateReadyForTrim = getDateReadyForTrim(workflow);
-      if ( workflow.dateAvailable && workflow.hasOwnProperty('scheduleStart')) {
-        workflow.classStartToAvailableDuration =
-          workflow.dateAvailable.getTime() - workflow.scheduleStart.getTime();
-      }
-       if ( workflow.dateReadyForTrim && workflow.hasOwnProperty('scheduleStart')) {
-        workflow.untilReadyForTrimDuration =
-          workflow.dateReadyForTrim.getTime() - workflow.scheduleStart.getTime();
-      }
-    });
-  }
+function setWorkflowDateAvailables(workflows){
+  $.each(workflows,function(i,workflow){
+    workflow.dateAvailable = getDateAvailable(workflow);
+    workflow.dateReadyForTrim = getDateReadyForTrim(workflow);
+    if ( workflow.dateAvailable && workflow.hasOwnProperty('scheduleStart')) {
+      workflow.classStartToAvailableDuration =
+        workflow.dateAvailable.getTime() - workflow.scheduleStart.getTime();
+    }
+     if ( workflow.dateReadyForTrim && workflow.hasOwnProperty('scheduleStart')) {
+      workflow.untilReadyForTrimDuration =
+        workflow.dateReadyForTrim.getTime() - workflow.scheduleStart.getTime();
+    }
+  });
+}
 
 function setWorkflow24HourMarks(workflows,workflow24HourMarks) {
     $.each(workflows,function(i,workflow){
