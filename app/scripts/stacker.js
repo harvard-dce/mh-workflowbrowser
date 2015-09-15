@@ -17,12 +17,12 @@ function create(){
 	      // can't stack these guys.
 	      return -1;
 	    }
-	    $.each(rows,function(rowI,rowEvents){
+	    rows.forEach(function(rowEvents,rowI){
 	      if (eventRow > -1){
 	        return false;
 	      }
 	      eventFits = true;
-	      $.each(rowEvents,function(eventI,e){
+	      	rowEvents.forEach(function(e){
 	        if ( e.dateStarted <= event.dateCompleted &&
 	             e.dateCompleted >=  event.dateStarted ) {
 	          eventFits = false;
