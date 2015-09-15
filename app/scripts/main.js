@@ -6,19 +6,14 @@
 'use strict';
 
 function _createWorkflowBrowser(conf,wfb) {
-
-  //wfb.conf=conf;
-  //if (true){return;}
   
-  var tooltips = require('./tooltips');       
-  var times    = require('./times');
-  var colors   = require('./colors');
-  var stacker  = require('./stacker');
-
   wfb.operationConf = conf.operationConf || {'apply-acl':{'color':'#6baed6'},'tag':{'color':'#9ecae1'},'inspect':{'color':'#c6dbef'},'prepare-av':{'color':'#e6550d'},'compose':{'color':'#3182bd'},'waveform':{'color':'#fd8d3c'},'append':{'color':'#fdae6b'},'cleanup':{'color':'#fdd0a2'},'send-email':{'color':'#31a354','boost':1 },'editor':{'color':'#74c476'},'image':{'color':'#a1d99b'},'segment-video':{'color':'#c7e9c0'},'segmentpreviews':{'color':'#756bb1'},'retract-engage':{'color':'#9e9ac8'},'publish-engage':{'color':'#bcbddc'},'test-local':{'color':'#dadaeb'},'zip':{'color':'#636363'},'execute-once':{'color':'#969696'},'archive':{'color':'#bdbdbd'},'error-resolution':{'color':'#d9d9d9'},'schedule':{'color':'#3182bd', 'visible':false},'capture':{'color':'#6baed6'},'ingest':{'color':'#9ecae1'}};
-
-  colors.init({'times':times,'operationConf':wfb.operationConf,'confStateColors':conf.stateColors});
-  tooltips.init({'times':times,'colors':colors});
+      
+  var timeManager    = require('./times').createTimeManager();
+  var colorist   = require('./colors').createColorist({'timeManager':timeManager,'operationConf':wfb.operationConf,'confStateColors':conf.stateColors});  
+  var tooltipper = require('./tooltips').createTooltipper({'timeManager':timeManager,'colorist':colorist}); 
+  var stacker  = require('./stacker');
+  
   var dateStarted, dateCompleted;
   var offHours = [];
   var midnights = [];
@@ -178,9 +173,9 @@ function _createWorkflowBrowser(conf,wfb) {
   };
 
   var processOperation = function processOperation(workflow,operation){
-    times.setOperationDates(wfb,operation);
+    timeManager.setOperationDates(wfb,operation);
     if ( operation.id === 'schedule' ) {
-      times.attachScheduledDuration(workflow,operation);
+      timeManager.attachScheduledDuration(workflow,operation);
     }
     if ( wfb.operationIds.indexOf(operation.id)===-1){
       wfb.operationIds.push(operation.id);
@@ -258,12 +253,12 @@ function _createWorkflowBrowser(conf,wfb) {
     $.each(wfs,function(i,workflow){
       processWorkflow(workflow);
     });
-    times.setWorkflowDateAvailables(workflows);
+    timeManager.setWorkflowDateAvailables(workflows);
     workflows=_.filter(workflows,durationPredicate);
     stackWorkflows(workflows);
     if ( true ) {
-      times.setWorkflow24HourMarks(workflows,workflow24HourMarks);
-      times.setLateTrimMarks(workflows,lateTrimMarks);
+      timeManager.setWorkflow24HourMarks(workflows,workflow24HourMarks);
+      timeManager.setLateTrimMarks(workflows,lateTrimMarks);
     }
     // now weed out operations that haven't passed duration filter. messy.
     var visibleWorkflowIds = _.pluck(workflows,'id');
@@ -298,7 +293,7 @@ function _createWorkflowBrowser(conf,wfb) {
   };
 
   setWorkflows(conf.workflows);
-  times.calculateOffHoursAndMidnights(wfb,offHours,midnights);
+  timeManager.calculateOffHoursAndMidnights(wfb,offHours,midnights);
 
   console.log('dateStarted: ' + dateStarted);
   console.log('dateCompleted: ' + dateCompleted);
@@ -417,8 +412,8 @@ function _createWorkflowBrowser(conf,wfb) {
       {'name': 'Start until Available <= 24 Hours','field': 'classStartToAvailableDuration','op':'<=', 'val':24},
       {'name': 'Start until Available > 24 Hours','field': 'classStartToAvailableDuration','op':'>', 'val':24},
       {'name': 'Start until Available > 48 Hours','field': 'classStartToAvailableDuration','op':'>', 'val':48},
-      {'name': 'Start until Ready for Trim <= ' + times.lateTrimHours +' Hours','field': 'untilReadyForTrimDuration','op':'<=', 'val':times.lateTrimHours},
-      {'name': 'Start until Ready for Trim > '+ times.lateTrimHours + ' Hours','field': 'untilReadyForTrimDuration','op':'>', 'val':times.lateTrimHours},
+      {'name': 'Start until Ready for Trim <= ' + timeManager.lateTrimHours +' Hours','field': 'untilReadyForTrimDuration','op':'<=', 'val':timeManager.lateTrimHours},
+      {'name': 'Start until Ready for Trim > '+ timeManager.lateTrimHours + ' Hours','field': 'untilReadyForTrimDuration','op':'>', 'val':timeManager.lateTrimHours},
       {'name': 'Entire Workflow <= 24 Hours','field': 'duration','op':'<=', 'val':24},
       {'name': 'Entire Workflow > 24 Hours','field': 'duration','op':'>', 'val':24},
       {'name': 'Entire Workflow > 48 Hours','field': 'duration','op':'>', 'val':48}
@@ -453,14 +448,14 @@ function initWorkflowTip(){
       workflowTip = d3.tip()
       .attr('class', 'd3-tip')
       .offset(function(){
-        return d3.mouse(this)[1]<tooltips.toolTipSpace ? [10,-10] : [-10, 0];})
+        return d3.mouse(this)[1]<tooltipper.toolTipSpace ? [10,-10] : [-10, 0];})
       .html(function(d) {
-        return tooltips.commonTipText(d,workflowStacker.rowCount());}
+        return tooltipper.commonTipText(d,workflowStacker.rowCount());}
      );
   svg.call(workflowTip);
   workflowTip.direction(function() {
     workflowTip.attr('class', 'd3-tip');
-    if (d3.mouse(this)[1] < tooltips.toolTipSpace) {
+    if (d3.mouse(this)[1] < tooltipper.toolTipSpace) {
       return 's';
     }
     return 'n';
@@ -480,7 +475,7 @@ function setJobsToRender(operation){
         job.jobOperation = job.operation;
       }
       job.operation=operation;
-      times.setJobDates(job);
+      timeManager.setJobDates(job);
       jobStacker.stack(job);
       jobs.push(job);
     });
@@ -494,16 +489,16 @@ function initOperationTip(){
   operationTip = d3.tip()
       .attr('class', 'd3-tip')
       .offset(function(){
-        return d3.mouse(this)[1]<tooltips.toolTipSpace ? [10,-10] : [-10, 0]; } )
+        return d3.mouse(this)[1]<tooltipper.toolTipSpace ? [10,-10] : [-10, 0]; } )
       .html(function(d) {
         setJobsToRender(d);    
-        return tooltips.commonTipText(workflowById[d.workflowId],workflowStacker.rowCount()) + '<hr />' + tooltips.operationTipText(d)
+        return tooltipper.commonTipText(workflowById[d.workflowId],workflowStacker.rowCount()) + '<hr />' + tooltipper.operationTipText(d)
         ;
       });  
   svg.call(operationTip);
   operationTip.direction(function() {
     operationTip.attr('class', 'd3-tip');
-    if (d3.mouse(this)[1] < tooltips.toolTipSpace) {
+    if (d3.mouse(this)[1] < tooltipper.toolTipSpace) {
       return 's';
     }
     return 'n';
@@ -514,7 +509,7 @@ function initJobTip(){
   jobTip = d3.tip()
       .attr('class', 'd3-tip')
       .offset([-10,0])
-      .html(function(d){return tooltips.jobTipText(d);})
+      .html(function(d){return tooltipper.jobTipText(d);})
   ;
   svg.call(jobTip);
 }
@@ -532,7 +527,7 @@ function initLateTrimTip(){
   lateTrimTip = d3.tip()
       .attr('class', 'd3-tip')
       .offset([-10,0])
-      .html('This lecture was not ready for trim within ' + times.lateTrimHours + ' hours!')
+      .html('This lecture was not ready for trim within ' + timeManager.lateTrimHours + ' hours!')
   ;
   svg.call(lateTrimTip);
 }
@@ -694,12 +689,12 @@ initTooltips();
       .append('rect')
       .attr('class', 'operation')
       .style('stroke', function(o) {
-        return colors.stateColor(o.state,colors.operationColor(o.id));})
+        return colorist.stateColor(o.state,colorist.operationColor(o.id));})
       .on('mouseover', operationTip.show)
       .on('mouseout',  operationTip.hide)
       .on('click', function(o) { if ( o.workflowState !== 'STOPPED') {
         window.open(workflowUrl(o.workflowId), '_blank'); } })
-      .style('fill', function(o) { return colors.operationColor(o.id); })
+      .style('fill', function(o) { return colorist.operationColor(o.id); })
     ;
     // update y
     if ( resized ) {
@@ -789,7 +784,7 @@ initTooltips();
       .attr('height', 2)
       .on('mouseover', workflowTip.show)
       .on('mouseout', workflowTip.hide)
-      .style('fill',  function(wf) {return colors.stateColor(wf.state,'black');})
+      .style('fill',  function(wf) {return colorist.stateColor(wf.state,'black');})
       .style('stroke', 'white')
       .style('opacity',0.6)
     ;

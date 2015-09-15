@@ -168,7 +168,7 @@ module.exports = function (grunt) {
       }
     },
 
-    // Use Browserify to stich together CJS modules into single app file.
+    // Use Browserify to stitch together CJS modules into single app file.
     browserify: {
       dev: {
         files: {
