@@ -910,9 +910,17 @@ function workflowBrowser(conf,wfb){
     return ds.name === conf.selectedDataSourceName; });
 
   var dataUrl =  wfb.dataSource.dataUrl;
+  var wfbServerParams = '';
+  if ( wfb.dataSource.type === 'wfb-server'){
+    var a = wfb.urlState.a;
+    var z = wfb.urlState.z;
+    if ( a && z ){
+      wfbServerParams='?a=' + a + '&z=' +z;
+    }
+  }
   d3.select(conf.target).html(
     '<p class="wfb_loading">Loading workflow data...</p>');
-  d3.json(dataUrl, function(error,data) {
+  d3.json(dataUrl+wfbServerParams, function(error,data) {
     if (error) {
       var message ='Error getting data from : ' + dataUrl;
       console.log(message);
