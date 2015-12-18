@@ -29,7 +29,7 @@ function createColorist(conf){
 	}
 
 	function operationColor(operationId){
-	    var opconf = operationConf[operationId] || { 'color': 'black' };
+	    var opconf = operationConf[operationId] || { 'color': '#afafaf' };
 	    return opconf.color;
 	}
 
